@@ -1,0 +1,149 @@
+Configuring computational-algebra-0.5.0.0...
+Warning: This package indirectly depends on multiple versions of the same
+package. This is highly likely to cause a compile failure.
+package ghci-8.0.2 requires binary-0.8.3.0
+package ghc-boot-8.0.2 requires binary-0.8.3.0
+package ghc-8.0.2 requires binary-0.8.3.0
+package text-1.2.2.2 requires binary-0.8.3.0
+package hmatrix-0.17.0.2 requires binary-0.8.3.0
+package constraints-0.8 requires binary-0.8.3.0
+package hpc-0.6.0.3 requires containers-0.5.7.1
+package hoopl-3.10.2.1 requires containers-0.5.7.1
+package ghci-8.0.2 requires containers-0.5.7.1
+package ghc-8.0.2 requires containers-0.5.7.1
+package binary-0.8.3.0 requires containers-0.5.7.1
+package th-reify-many-0.1.8 requires containers-0.5.7.1
+package th-lift-instances-0.1.11 requires containers-0.5.7.1
+package th-expand-syns-0.4.3.0 requires containers-0.5.7.1
+package th-desugar-1.6 requires containers-0.5.7.1
+package sized-0.2.1.0 requires containers-0.5.7.1
+package singletons-2.2 requires containers-0.5.7.1
+package semigroupoids-5.2.1 requires containers-0.5.7.1
+package presburger-1.3.1 requires containers-0.5.7.1
+package parallel-3.2.1.1 requires containers-0.5.7.1
+package mono-traversable-1.0.2.1 requires containers-0.5.7.1
+package lens-4.14 requires containers-0.5.7.1
+package kan-extensions-5.0.2 requires containers-0.5.7.1
+package free-4.12.4 requires containers-0.5.7.1
+package equational-reasoning-0.4.1.1 requires containers-0.5.7.1
+package convertible-1.1.1.0 requires containers-0.5.7.1
+package computational-algebra-0.5.0.0 requires containers-0.5.7.1
+package comonad-5.0.2 requires containers-0.5.7.1
+package binary-0.8.3.0 requires containers-0.5.7.1
+package bifunctors-5.4.2 requires containers-0.5.7.1
+package basic-prelude-0.6.1.1 requires containers-0.5.7.1
+package arithmoi-0.4.3.0 requires containers-0.5.7.1
+package algebra-4.3 requires containers-0.5.7.1
+package adjunctions-4.3 requires containers-0.5.7.1
+package ListLike-4.5.1 requires containers-0.5.7.1
+Building computational-algebra-0.5.0.0...
+Preprocessing library computational-algebra-0.5.0.0...
+[ 1 of 27] Compiling Algebra.Normed   ( Algebra/Normed.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Normed.o )
+[ 2 of 27] Compiling Algebra.Scalar   ( Algebra/Scalar.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Scalar.o )
+
+Algebra/Scalar.hs:6:1: warning: [-Wunused-imports]
+    The qualified import of ‘Data.Coerce’ is redundant
+      except perhaps to import instances from ‘Data.Coerce’
+    To import instances alone, use: import Data.Coerce()
+
+Algebra/Scalar.hs:8:1: warning: [-Wunused-imports]
+    The import of ‘Control.Lens’ is redundant
+      except perhaps to import instances from ‘Control.Lens’
+    To import instances alone, use: import Control.Lens()
+[ 3 of 27] Compiling Algebra.Instances ( Algebra/Instances.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Instances.o )
+[ 4 of 27] Compiling Algebra.Internal ( Algebra/Internal.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Internal.o )
+
+Algebra/Internal.hs:67:1: warning: [-Wmissing-signatures]
+    Top-level binding with no type signature:
+      sizedLength :: forall nat a (f :: * -> *) (n :: nat).
+                     (ListLike-4.5.1:Data.ListLike.Base.ListLike (f a) a,
+                      Show (Data.Type.Monomorphic.MonomorphicRep Sing),
+                      Integral (Data.Type.Monomorphic.MonomorphicRep Sing),
+                      Data.Type.Monomorphic.Monomorphicable Sing, PeanoOrder nat) =>
+                     sized-0.2.1.0:Data.Sized.Internal.Sized f n a -> Sing n
+
+Algebra/Internal.hs:112:1: warning: [-Worphans]
+    Orphan instance: instance Hashable a => Hashable (Seq a)
+    To avoid this
+        move the instance declaration to the module of the class or of the type, or
+        wrap the type with a newtype and declare the instance on the new type.
+[ 5 of 27] Compiling Algebra.Ring.Ideal ( Algebra/Ring/Ideal.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Ideal.o )
+
+Algebra/Ring/Ideal.hs:53:11: warning: [-Winline-rule-shadowing]
+    Rule "mapIdeal/id" may never fire because ‘id’ might inline first
+    Probable fix: add an INLINE[n] or NOINLINE[n] pragma for ‘id’
+[ 6 of 27] Compiling Algebra.Ring.Polynomial.Monomial ( Algebra/Ring/Polynomial/Monomial.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Monomial.o )
+
+Algebra/Ring/Polynomial/Monomial.hs:29:1: warning: [-Wunused-imports]
+    The import of ‘alaf’ from module ‘Control.Lens’ is redundant
+
+Algebra/Ring/Polynomial/Monomial.hs:39:1: warning: [-Wunused-imports]
+    The import of ‘Data.Monoid’ is redundant
+      except perhaps to import instances from ‘Data.Monoid’
+    To import instances alone, use: import Data.Monoid()
+
+Algebra/Ring/Polynomial/Monomial.hs:41:1: warning: [-Wunused-imports]
+    The qualified import of ‘Data.MonoTraversable.Unprefixed’ is redundant
+      except perhaps to import instances from ‘Data.MonoTraversable.Unprefixed’
+    To import instances alone, use: import Data.MonoTraversable.Unprefixed()
+
+Algebra/Ring/Polynomial/Monomial.hs:144:1: warning: [-Winline-rule-shadowing]
+    Rule "cmpMonomial/unary" may never fire
+      because ‘cmpMonomial’ might inline first
+    Probable fix: add an INLINE[n] or NOINLINE[n] pragma for ‘cmpMonomial’
+/home/ferz/VS Code/hskl/.stack-work/install/x86_64-linux/lts-9.9/8.0.2/lib/x86_64-linux-ghc-8.0.2/sized-0.2.1.0-Gmv27Qev3Ja4Jmd6dtcZ8c/Data/Sized/Internal.hi
+Declaration for $fFunctorWithIndexOrdinalSized_$s$fFunctorWithIndexOrdinalSized1
+Class ops for dfun $fFunctorWithIndexOrdinalSized_$s$fFunctorWithIndexOrdinalSized1:
+  Iface id out of scope:  $dIntegral
+[ 7 of 27] Compiling Algebra.Ring.Polynomial.Class ( Algebra/Ring/Polynomial/Class.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Class.o )
+
+Algebra/Ring/Polynomial/Class.hs:204:1: warning: [-Winline-rule-shadowing]
+    Rule "liftMap/identity-2" may never fire
+      because ‘id’ might inline first
+    Probable fix: add an INLINE[n] or NOINLINE[n] pragma for ‘id’
+/home/ferz/VS Code/hskl/.stack-work/install/x86_64-linux/lts-9.9/8.0.2/lib/x86_64-linux-ghc-8.0.2/sized-0.2.1.0-Gmv27Qev3Ja4Jmd6dtcZ8c/Data/Sized/Internal.hi
+Declaration for $fFoldableWithIndexOrdinalSized_$s$fFoldableWithIndexOrdinalSized1
+Class ops for dfun $fFoldableWithIndexOrdinalSized_$s$fFoldableWithIndexOrdinalSized1:
+  Iface id out of scope:  $dIntegral
+[ 8 of 27] Compiling Algebra.Ring.Polynomial.Internal ( Algebra/Ring/Polynomial/Internal.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Internal.o )
+[ 9 of 27] Compiling Algebra.Prelude.Core ( Algebra/Prelude/Core.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Prelude/Core.o )
+[10 of 27] Compiling Algebra.Ring.Polynomial.Univariate ( Algebra/Ring/Polynomial/Univariate.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Univariate.o )
+
+Algebra/Ring/Polynomial/Univariate.hs:160:1: warning: [-Winline-rule-shadowing]
+    Rule "x ^ n" may never fire because ‘^’ might inline first
+    Probable fix: add an INLINE[n] or NOINLINE[n] pragma for ‘^’
+[11 of 27] Compiling Algebra.Algorithms.PrimeTest ( Algebra/Algorithms/PrimeTest.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Algorithms/PrimeTest.o )
+[12 of 27] Compiling Algebra.Field.Finite ( Algebra/Field/Finite.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Field/Finite.o )
+[13 of 27] Compiling Algebra.Field.Galois.Internal ( Algebra/Field/Galois/Internal.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Field/Galois/Internal.o )
+
+Algebra/Field/Galois/Internal.hs:15:1: warning: [-Wunused-imports]
+    The qualified import of ‘Data.Map’ is redundant
+      except perhaps to import instances from ‘Data.Map’
+    To import instances alone, use: import Data.Map()
+[14 of 27] Compiling Algebra.Field.Galois.Conway ( Algebra/Field/Galois/Conway.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Field/Galois/Conway.o )
+[15 of 27] Compiling Algebra.Field.Galois ( Algebra/Field/Galois.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Field/Galois.o )
+[16 of 27] Compiling Algebra.Algorithms.Groebner ( Algebra/Algorithms/Groebner.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Algorithms/Groebner.o )
+[17 of 27] Compiling Algebra.Ring.Polynomial ( Algebra/Ring/Polynomial.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial.o )
+[18 of 27] Compiling Algebra.Ring.Polynomial.Labeled ( Algebra/Ring/Polynomial/Labeled.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Labeled.o )
+[19 of 27] Compiling Algebra.Prelude  ( Algebra/Prelude.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Prelude.o )
+[20 of 27] Compiling Algebra.Ring.Polynomial.Quotient ( Algebra/Ring/Polynomial/Quotient.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Quotient.o )
+[21 of 27] Compiling Algebra.Ring.Polynomial.Factorise ( Algebra/Ring/Polynomial/Factorise.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Ring/Polynomial/Factorise.o )
+[22 of 27] Compiling Algebra.Field.AlgebraicReal ( Algebra/Field/AlgebraicReal.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Field/AlgebraicReal.o )
+
+Algebra/Field/AlgebraicReal.hs:311:1: warning: [-Winline-rule-shadowing]
+    Rule "plus-zero-left" may never fire
+      because rule "Class op fromInteger" for ‘P.fromInteger’ might fire first
+    Probable fix: add phase [n] or [~n] to the competing rule
+
+Algebra/Field/AlgebraicReal.hs:313:1: warning: [-Winline-rule-shadowing]
+    Rule "plus-zero-right" may never fire
+      because rule "Class op fromInteger" for ‘P.fromInteger’ might fire first
+    Probable fix: add phase [n] or [~n] to the competing rule
+[23 of 27] Compiling Algebra.Algorithms.FGLM ( Algebra/Algorithms/FGLM.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Algorithms/FGLM.o )
+[24 of 27] Compiling Algebra.Algorithms.ChineseRemainder ( Algebra/Algorithms/ChineseRemainder.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Algorithms/ChineseRemainder.o )
+[25 of 27] Compiling Algebra.LinkedMatrix ( Algebra/LinkedMatrix.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/LinkedMatrix.o )
+[26 of 27] Compiling Algebra.Matrix   ( Algebra/Matrix.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Matrix.o )
+[27 of 27] Compiling Algebra.Algorithms.ZeroDim ( Algebra/Algorithms/ZeroDim.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Algebra/Algorithms/ZeroDim.o )
+Installing library in /home/ferz/VS
+Code/hskl/.stack-work/install/x86_64-linux/lts-9.9/8.0.2/lib/x86_64-linux-ghc-8.0.2/computational-algebra-0.5.0.0-Dct2HkMegORHMKn3kDro76
+Registering computational-algebra-0.5.0.0...
