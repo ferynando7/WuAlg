@@ -101,7 +101,7 @@ lcmMonomial' n a b =
     let monomList = maxDegrees a b
     in toMonomial n monomList 
 
---Funcion que converte un arreglo de 
+--Funcion que converte un arreglo de Int en un Monomio
 toMonomial :: SNat n -> [Int] -> OrderedMonomial ord n
 toMonomial n a = orderMonomial Proxy (fromList n a)
 
@@ -113,12 +113,31 @@ maxMonomial (x:xs) n
     | (x!!n) > (maxMonomial xs n)!!n = x
     | otherwise = maxMonomial xs n
 
+indexMaxMonomial :: [[Int]] -> Int -> Int
+indexMaxMonomial [a] _ = 0
+indexMaxMonomial (x:xs) n
+    | (x!!n) >= (maxMonomial xs n)!!n = indexMaxMonomial xs n
+    | otherwise = 1 + indexMaxMonomial xs n
+
+
+-- indexMaxMon :: [[Int]] -> [Int] -> Int
+-- indexMaxMon a b = M.findIndex b (a)
+
+
+
 --Funcion que obtiene el leadingMonomial de forma algebraica
 leadingMonomial' :: (IsOrderedPolynomial poly, Field (Coefficient poly))
                     => poly -> SNat n -> Int -> OrderedMonomial ord n
 leadingMonomial' f n i = 
     let a = map (V.toList) (HS.toList (monomials f))
     in toMonomial n (maxMonomial a i) 
+
+
+-- leadingTerm' :: (IsOrderedPolynomial poly, Field (Coefficient poly)) 
+--             => poly -> Int -> (k, OrderedMonomial order n)
+-- leadingTerm' f i = 
+            
+
 
 
 --Nueva funcion sPolynomial en la cual se indica la variable con respecto a la cual se debe obtener el sPolynomial
@@ -174,40 +193,32 @@ p5 =
 --
 
 
-monom1 = map (V.toList) (HS.toList (monomials p4))
-monom2 = map (V.toList) (HS.toList (monomials p5))
+pol = (map V.toList (HS.toList (monomials p4)))
 
-maxM1 = maxMonomial monom1 1
-maxM2 = maxMonomial monom2 1
-
-
-leastCM = lcmMonomial' sONE maxM1 maxM2
-
--- leadM1 = leadingMonomial' monom1 sONE 1
--- leadM2 = leadingMonomial' monom2 sONE 1
-
--- leadMON = lcmMonomial leadM1 leadM2
+leadMon1 = maxMonomial pol 1
+maximoMonomio = indexMaxMonomial pol 1 
 
 
-ll1 = leadingMonomial' p1 sONE 0
-ll2 = leadingMonomial' p1 sONE 1
-ll3 = leadingMonomial' p1 sONE 2
-
+-- maxi = maxMonomial pol 1
+-- indexMax = M.findIndex 3 p4
 
 sONE :: SNat 3
 sONE = sing
 
 
+ld = leadingTerm p4
+polInTerms = _terms p4
+indexMaxi = M.findIndex ld polInTerms
+
+
+
+
 main :: IO()
 main = do
---    print monom1
---    print monom2
---    print maxM1
---    print maxM2
---    print leastCM
---    print leadM1
---    print leadM2
---    print leadMON
-    print ll1
-    print ll2
-    print ll3
+    -- print pol
+    -- print leadMon1
+    -- print maximoMonomio
+    print p4
+    print ld
+    print polInTerms
+    print indexMaxi
