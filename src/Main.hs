@@ -206,7 +206,7 @@ sONE :: SNat 3
 sONE = sing
 
 
-ld = leadingTerm p4
+ld = leadingMonomial p4
 polInTerms = _terms p4
 indexMaxi = M.findIndex ld polInTerms
 
