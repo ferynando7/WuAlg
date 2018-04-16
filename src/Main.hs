@@ -113,31 +113,26 @@ maxMonomial (x:xs) n
     | (x!!n) > (maxMonomial xs n)!!n = x
     | otherwise = maxMonomial xs n
 
-indexMaxMonomial :: [[Int]] -> Int -> Int
-indexMaxMonomial [a] _ = 0
-indexMaxMonomial (x:xs) n
-    | (x!!n) >= (maxMonomial xs n)!!n = indexMaxMonomial xs n
-    | otherwise = 1 + indexMaxMonomial xs n
+--indexMaxMonomial :: [[Int]] -> Int -> Int
+--indexMaxMonomial [a] _ = 0
+--indexMaxMonomial (x:xs) n
+--    | (x!!n) >= (maxMonomial xs n)!!n = indexMaxMonomial xs n
+--    | otherwise = 1 + indexMaxMonomial xs n
 
 
 -- indexMaxMon :: [[Int]] -> [Int] -> Int
 -- indexMaxMon a b = M.findIndex b (a)
 
-
+--indexMaxi :: (IsOrderedPolynomial poly, Field (Coefficient poly))
+--            => poly -> SNat n ->  Int -> Int
+--indexMaxi poly n i = M.findIndex (leadingMonomial' poly n i) (_terms poly)
 
 --Funcion que obtiene el leadingMonomial de forma algebraica
 leadingMonomial' :: (IsOrderedPolynomial poly, Field (Coefficient poly))
                     => poly -> SNat n -> Int -> OrderedMonomial ord n
 leadingMonomial' f n i = 
     let a = map (V.toList) (HS.toList (monomials f))
-    in toMonomial n (maxMonomial a i) 
-
-
--- leadingTerm' :: (IsOrderedPolynomial poly, Field (Coefficient poly)) 
---             => poly -> Int -> (k, OrderedMonomial order n)
--- leadingTerm' f i = 
-            
-
+    in toMonomial n (maxMonomial a i)
 
 
 --Nueva funcion sPolynomial en la cual se indica la variable con respecto a la cual se debe obtener el sPolynomial
@@ -146,18 +141,6 @@ leadingMonomial' f n i =
 -- sPolynomial' f g n =
 --      let h = (one, lcmMonomial (leadingMonomial' f sONE n) (leadingMonomial' g sONE n))
 --      in toPolynomial (h tryDiv leadingTerm f) * f - toPolynomial (h tryDiv leadingTerm g) * g
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -190,35 +173,92 @@ p5 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p5 =
     let [x,y,z] = vars
     in x^2 + y^2 -1
---
+------------------------------------------------------------------------------
 
 
-pol = (map V.toList (HS.toList (monomials p4)))
 
-leadMon1 = maxMonomial pol 1
-maximoMonomio = indexMaxMonomial pol 1 
+pol4 = polToList p4
+pol5 = polToList p5
 
 
+--leadMon1 = maxMonomial pol 1
+--maximoMonomio = indexMaxMonomial pol 1 
 -- maxi = maxMonomial pol 1
 -- indexMax = M.findIndex 3 p4
 
 sONE :: SNat 3
 sONE = sing
 
+--Nueva funcion sPolynomial en la cual se indica la variable con respecto a la cual se debe obtener el sPolynomial
 
-ld = leadingMonomial p4
-polInTerms = _terms p4
-indexMaxi = M.findIndex ld polInTerms
+----- FUNCIONES ANTHONY
+
+leadingTerm' ::  (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        =>  OrderedPolynomial k order n -> SNat n -> Int -> (k, OrderedMonomial order n)
+leadingTerm' f n i =
+        let idx = indexMax f n i
+        in (getTerms' f)!!idx
+
+getTerms' :: OrderedPolynomial k order n -> [(k, OrderedMonomial order n)]
+getTerms' = map (snd &&& fst) . M.toAscList . _terms
+
+polToList :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => OrderedPolynomial k order n  -> [[Int]]
+polToList polynom = (map V.toList (HS.toList (monomials polynom)))
+
+--indexMax :: poly -> SNat n -> Int -> Int
+indexMax :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+         => OrderedPolynomial k order n -> SNat n -> Int -> Int
+indexMax f n i = M.findIndex (leadingMonomial' f n i) (_terms f)
 
 
+sPolynomial' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+           => OrderedPolynomial k order n  -> OrderedPolynomial k order n  -> SNat n -> Int -> OrderedPolynomial k order n
+sPolynomial' f g n i =
+      let h = (one, lcmMonomial' n (maxMonomial (polToList f) i) (maxMonomial (polToList g) i) )
+      in toPolynomial (h `tryDiv` (leadingTerm' f n i) )* f - toPolynomial (h `tryDiv` (leadingTerm' g n i) ) * g
+
+---- ACABA FUNCIONES ANTHONY--------------
 
 
+-------- ZONA DE PREUBAS ---------------------
+polInTerms = (getTerms p4)!!0
+chain = fullAscendentChain [p4,p5] 0
+--indexMaxi = M.findIndex ld polInTerms
+spol1 = sPolynomial' (chain!!1) (chain!!0) sONE 1
+spol2 = sPolynomial' spol1 (chain!!0) sONE 1
+--leadingp5 = leadingMonomial' p5 sONE 1
+--leadingTerm5 = leadingTerm' p5 sONE 1
+-- leadingTerm4 = leadingTerm' p4 sONE 1
+-- idxMax  =  indexMax p5 sONE 1
+-- h = (one, lcmp4p5)
+-- division =  toPolynomial (h `tryDiv` leadingTerm4) * p4
+-- ldp4 = maxMonomial pol4 0
+-- ldp5 = maxMonomial pol5 0
+
+-- lcmp4p5 = lcmMonomial' sONE ldp4 ldp5
+
+
+-----------------------------------------------------
 main :: IO()
 main = do
     -- print pol
     -- print leadMon1
     -- print maximoMonomio
-    print p4
-    print ld
-    print polInTerms
-    print indexMaxi
+    -- putStrLn "lcm p4 p5 lista"
+    -- print lcmp4p5
+    -- --print ld
+    -- putStrLn "Indice"
+    -- print idxMax
+    -- putStrLn "Leading Term 5"
+    -- print leadingTerm5
+    -- print division
+    putStrLn "Cadena"
+    print chain
+    putStrLn "Termino que deberia ir"
+    print spol1
+    print spol2
+    --putStrLn "lcm p4 p5"
+    --print lcmp4p5
+    --putStrLn "Terms of pol"
+    --print polInTerms
