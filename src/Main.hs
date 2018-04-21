@@ -21,73 +21,91 @@ import qualified Data.Map.Strict          as M
 
 ---------------DEFINICION DE LA FUNCION PSEUDOREMAINDER-----------------------------
 
-pseudoRemainder :: (IsOrderedPolynomial poly, Field (Coefficient poly))
-                    => poly -> poly -> Int -> poly
-pseudoRemainder f g n
-                | classVarDeg f n < classVarDeg g n = f
-                | otherwise = pseudoRemainder ( sPolynomial f g) g n
+pseudoRemainder :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+                    => OrderedPolynomial k order n -> OrderedPolynomial k order n -> SNat n -> Int -> OrderedPolynomial k order n
+pseudoRemainder f g sN i
+                | classVarDeg f sN i < classVarDeg g sN i || classVarDeg g sN i == 0 = f
+                | otherwise = pseudoRemainder (sPolynomial' f g sN i) g sN i
 ------------------------------------------------------------------------
 
 
 -----------DEFINCION DE LAS FUNCIONES QUE OBTIENEN EL GRADO DE LA VARIABLE DE CLASE---------------
 --Returns the array of exponents of the leading monomial
-leadingMonomialDegs :: (IsOrderedPolynomial poly, Field (Coefficient poly))
-       => poly -> [Int]
-leadingMonomialDegs = V.toList . getMonomial . leadingMonomial
+leadingMonomialDegs :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+       => OrderedPolynomial k order n -> SNat n -> Int -> [Int]
+leadingMonomialDegs f sN i = V.toList ( getMonomial  (leadingMonomial' f sN i))
 
 
 --Returns the degree of the class variable
-classVarDeg :: (IsOrderedPolynomial poly, Field (Coefficient poly))
-        => poly -> Int -> Int
-classVarDeg f n =  (leadingMonomialDegs f ) !! n
+classVarDeg :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => OrderedPolynomial k order n  -> SNat n -> Int -> Int
+classVarDeg f sN i =  (leadingMonomialDegs f sN i) !! i
 ---------------------------------------------------------------
 
 ------FUNCIONES PARA ACTUALIZAR LA CADENA ASCENDENTE----------------
 --Funcion que obtiene el minimo polinomio con respecto a la variable de clase.
 --Esto es util para saber para cual polinomio dividir
-getMinimalPoly::(IsOrderedPolynomial poly, Field (Coefficient poly))
-        => [poly] -> Int -> poly
-getMinimalPoly [f] _ = f
-getMinimalPoly (x:xs) n
-    | classVarDeg x n <= classVarDeg (getMinimalPoly xs n) n = x
-    | otherwise = getMinimalPoly xs n
+getMinimalPoly:: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => [OrderedPolynomial k order n] -> SNat n -> Int -> OrderedPolynomial k order n
+getMinimalPoly [f] _ _ = f
+getMinimalPoly (x:xs) sN i
+    | classVarDeg x sN i <= classVarDeg (getMinimalPoly xs sN i) sN i = x
+    | otherwise = getMinimalPoly xs sN i
 
 
 --Funcion que compara dos polinomios
-isEqualTo :: (IsOrderedPolynomial poly, Field (Coefficient poly))
-        => poly -> poly -> Bool
+isEqualTo :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => OrderedPolynomial k order n -> OrderedPolynomial k order n -> Bool
 isEqualTo f g
     | f == g = True
     | otherwise = False
 
 
 --Funcion que obtiene los polinomios que seran los divisores
-getDividendPolys::(IsOrderedPolynomial poly, Field (Coefficient poly))
-        => [poly] -> Int -> [poly]
-getDividendPolys (x:xs) n
-    | isEqualTo x (getMinimalPoly (x:xs) n) = xs
-    | otherwise = (x: getDividendPolys xs n)
+getDividendPolys::(IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
+getDividendPolys (x:xs) sN i
+    | isEqualTo x (getMinimalPoly (x:xs) sN i) = xs
+    | otherwise = (x: getDividendPolys xs sN i)
 
 ------------------FUNCION QUE OBTIENE LOS PSEUDOREMAINDERS DE UN CONJUNTO DE POLINOMIOS
-getPseudoRemainders :: (IsOrderedPolynomial poly, Field (Coefficient poly))
-        => [poly] -> Int -> [poly]
-getPseudoRemainders [a] _ = []
-getPseudoRemainders polys n =
-    let minPoly = getMinimalPoly polys n
-        dividend = getDividendPolys polys n
-        in ((pseudoRemainder (head(dividend)) minPoly n) : (getPseudoRemainders (minPoly:tail(dividend)) n))
+getPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
+getPseudoRemainders [a] _ _ = []
+getPseudoRemainders polys sN i =
+    let minPoly = getMinimalPoly polys sN i
+        dividend = getDividendPolys polys sN i
+        in ((pseudoRemainder (head(dividend)) minPoly sN i) : (getPseudoRemainders (minPoly:tail(dividend)) sN i))
 
 
 ---------FUNCION QUE OBTIENE LA CADENA ASCENDENTE-------
-fullAscendentChain :: (IsOrderedPolynomial poly, Field (Coefficient poly))
-        => [poly] -> Int -> [poly]
-fullAscendentChain [a] _ = [a]
-fullAscendentChain polys n = (getMinimalPoly polys n : fullAscendentChain (getPseudoRemainders polys n) (n+1))
+fullAscendentChain :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => [OrderedPolynomial k order n] -> SNat n-> Int -> [OrderedPolynomial k order n]
+fullAscendentChain [a] _ _ = [a]
+fullAscendentChain polys sN i = (getMinimalPoly polys sN i : fullAscendentChain (getPseudoRemainders polys sN i) sN (i+1))
 
 
-
+ascendentChain :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
+ascendentChain polys [] sN i p
+                    | i == 0 && i == p = [possiblePoly ]
+                    | i == 0 = (possiblePoly : ascendentChain polys (getPseudoRemainders polys sN i) sN (i+1) p)
+                    | i >= p  =  []
+                    where  possiblePoly = getMinimalPoly polys sN i
+ascendentChain polys pseudos sN i p
+                    | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys (getPseudoRemainders pseudos sN i) sN (i+1) p)
+                    | i >= p  =  []
+                    where   checkChainPoly = getMinimalPoly (invPseudoRemainders (ascendentChain polys [] sN 0 (i-1)) possiblePoly sN i) sN i
+                            possiblePoly = getMinimalPoly pseudos sN i
+                            --getMinimalPoly (possiblePoly: [checkChainPoly]) sN i
 
 --FUNCIONES NUEVAS--
+
+invPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+        => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
+invPseudoRemainders [] _ _ _ = []
+invPseudoRemainders (x:xs) poly sN i = ((pseudoRemainder poly x sN i) : (invPseudoRemainders xs poly sN i))
+
 
 --Funciones que obtiene el maximo de cada posicion de dos arreglos
 maxDegrees :: [Int] -> [Int] -> [Int]
@@ -113,20 +131,6 @@ maxMonomial (x:xs) n
     | (x!!n) > (maxMonomial xs n)!!n = x
     | otherwise = maxMonomial xs n
 
---indexMaxMonomial :: [[Int]] -> Int -> Int
---indexMaxMonomial [a] _ = 0
---indexMaxMonomial (x:xs) n
---    | (x!!n) >= (maxMonomial xs n)!!n = indexMaxMonomial xs n
---    | otherwise = 1 + indexMaxMonomial xs n
-
-
--- indexMaxMon :: [[Int]] -> [Int] -> Int
--- indexMaxMon a b = M.findIndex b (a)
-
---indexMaxi :: (IsOrderedPolynomial poly, Field (Coefficient poly))
---            => poly -> SNat n ->  Int -> Int
---indexMaxi poly n i = M.findIndex (leadingMonomial' poly n i) (_terms poly)
-
 --Funcion que obtiene el leadingMonomial de forma algebraica
 leadingMonomial' :: (IsOrderedPolynomial poly, Field (Coefficient poly))
                     => poly -> SNat n -> Int -> OrderedMonomial ord n
@@ -135,12 +139,6 @@ leadingMonomial' f n i =
     in toMonomial n (maxMonomial a i)
 
 
---Nueva funcion sPolynomial en la cual se indica la variable con respecto a la cual se debe obtener el sPolynomial
--- sPolynomial' :: (IsOrderedPolynomial poly, Field (Coefficient poly))
---              => poly -> poly -> Int -> poly
--- sPolynomial' f g n =
---      let h = (one, lcmMonomial (leadingMonomial' f sONE n) (leadingMonomial' g sONE n))
---      in toPolynomial (h tryDiv leadingTerm f) * f - toPolynomial (h tryDiv leadingTerm g) * g
 
 
 
@@ -177,18 +175,6 @@ p5 =
 
 
 
-pol4 = polToList p4
-pol5 = polToList p5
-
-
---leadMon1 = maxMonomial pol 1
---maximoMonomio = indexMaxMonomial pol 1 
--- maxi = maxMonomial pol 1
--- indexMax = M.findIndex 3 p4
-
-sONE :: SNat 3
-sONE = sing
-
 --Nueva funcion sPolynomial en la cual se indica la variable con respecto a la cual se debe obtener el sPolynomial
 
 ----- FUNCIONES ANTHONY
@@ -222,43 +208,20 @@ sPolynomial' f g n i =
 
 
 -------- ZONA DE PREUBAS ---------------------
-polInTerms = (getTerms p4)!!0
-chain = fullAscendentChain [p4,p5] 0
---indexMaxi = M.findIndex ld polInTerms
-spol1 = sPolynomial' (chain!!1) (chain!!0) sONE 1
-spol2 = sPolynomial' spol1 (chain!!0) sONE 1
---leadingp5 = leadingMonomial' p5 sONE 1
---leadingTerm5 = leadingTerm' p5 sONE 1
--- leadingTerm4 = leadingTerm' p4 sONE 1
--- idxMax  =  indexMax p5 sONE 1
--- h = (one, lcmp4p5)
--- division =  toPolynomial (h `tryDiv` leadingTerm4) * p4
--- ldp4 = maxMonomial pol4 0
--- ldp5 = maxMonomial pol5 0
+numVar :: SNat 3
+numVar = sing
 
--- lcmp4p5 = lcmMonomial' sONE ldp4 ldp5
+chain = ascendentChain [p4,p5] [] numVar 0 2
+chainAn = fullAscendentChain [p4,p5] numVar 0
+------------------------------------------------
 
 
 -----------------------------------------------------
 main :: IO()
 main = do
-    -- print pol
-    -- print leadMon1
-    -- print maximoMonomio
-    -- putStrLn "lcm p4 p5 lista"
-    -- print lcmp4p5
-    -- --print ld
-    -- putStrLn "Indice"
-    -- print idxMax
-    -- putStrLn "Leading Term 5"
-    -- print leadingTerm5
-    -- print division
-    putStrLn "Cadena"
+    putStrLn "Cadena Mejorada"
     print chain
+    putStrLn "Cadena Antigua"
+    print chainAn
     putStrLn "Termino que deberia ir"
-    print spol1
-    print spol2
-    --putStrLn "lcm p4 p5"
-    --print lcmp4p5
-    --putStrLn "Terms of pol"
-    --print polInTerms
+
