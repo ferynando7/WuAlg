@@ -49,8 +49,6 @@ getMinimalPoly:: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Eu
         => [OrderedPolynomial k order n] -> SNat n -> Int -> OrderedPolynomial k order n
 getMinimalPoly [f] _ _ = f
 getMinimalPoly (x:xs) sN i
-    | classVarDeg x sN i == 0 = getMinimalPoly xs sN i
-    | classVarDeg (getMinimalPoly xs sN i) sN i == 0 = x
     | classVarDeg x sN i <= classVarDeg (getMinimalPoly xs sN i) sN i = x
     | otherwise = getMinimalPoly xs sN i
 
@@ -86,59 +84,20 @@ fullAscendentChain :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n orde
 fullAscendentChain [a] _ _ = [a]
 fullAscendentChain polys sN i = (getMinimalPoly polys sN i : fullAscendentChain (getPseudoRemainders polys sN i) sN (i+1))
 
--- Funcion que obtiene la cadena ascendente. Recibe dos cadenas de polinomios un sNat, que denota el numero de variables, un Int que denota la variable a eliminar, y un Int que denota la parada de la cadena
--- La primera lista son los polynomios originales y la segunda lista almacena los pseudoremainders
--- ascendentChain :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
---         => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
--- -- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
--- ascendentChain polys [] sN i p
---                     | i == 0 && i == p = [possiblePoly ]
---                     | i == 0 =  (possiblePoly: ascendentChain polys (getPseudoRemainders polys sN (i)) sN (i+1) p)
---                     | i >= p  =  []
---                     where  minimalPoly = getMinimalPoly polys sN i
---                            possiblePoly = getMinimalPoly (minimalPoly : (getPseudoRemainders polys sN 0) ) sN 0
--- ascendentChain polys pseudos sN i p
---                     | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys (getPseudoRemainders pseudos sN i) sN (i+1) p)
---                     | i >= p  =  []
---                     -- En caso de que i == p entonces paramos la funcion
---                     where   checkChainPoly = getMinimalPoly (invPseudoRemainders (ascendentChain polys [] sN 0 (i-1)) possiblePoly sN i) sN i
---                             possiblePoly = getMinimalPoly pseudos sN i
---                     -- checkChainPoly obtiene el minimo polynomio entre los pseudoRemainders del polinomio candidato a ser añadido a la cadena y la cadena
---                     -- possiblePoly es el polynomio candidato a ser añadido a la cadena
---                     -- Si el possiblePoly no se puede dividir con respecto a ningun elemento de la cadena entonces, este pasa directamente a la cadena
-
 
 ascendentChain :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
         => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
--- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
-ascendentChain polys [a] sN i p = [a]
-  --[getMinimalPoly (invPseudoRemainders (ascendentChain polys [] sN 0 (i-1)) a sN i) sN i]
 ascendentChain polys [] sN i p
                     | i == 0 && i == p = [possiblePoly ]
-                    | i == 0 =  (possiblePoly: ascendentChain polys pseudos sN (i+1) p)
+                    | i == 0 = (possiblePoly : ascendentChain polys (getPseudoRemainders polys sN i) sN (i+1) p)
                     | i >= p  =  []
-                    where  minimalPoly = getMinimalPoly polys sN i
-                           possiblePoly = getMinimalPoly (minimalPoly : (getPseudoRemainders polys sN i) ) sN i
-                           pseudos = map (\p -> if p == possiblePoly && minimalPoly /= possiblePoly then pseudoRemainder minimalPoly possiblePoly sN i else p) (getPseudoRemainders polys sN (i))
+                    where  possiblePoly = getMinimalPoly polys sN i
 ascendentChain polys pseudos sN i p
---                    | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys (getPseudoRemainders pseudos sN i) sN (i+1) p)
-                    | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys pseudos1 sN (i+1) p)
+                    | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys (getPseudoRemainders pseudos sN i) sN (i+1) p)
                     | i >= p  =  []
-                    -- En caso de que i == p entonces paramos la funcion
                     where   checkChainPoly = getMinimalPoly (invPseudoRemainders (ascendentChain polys [] sN 0 (i-1)) possiblePoly sN i) sN i
                             possiblePoly = getMinimalPoly pseudos sN i
-
-                            pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder checkChainPoly possiblePoly sN i else p) (getPseudoRemainders pseudos sN (i))
-                            --minimalPoly = getMinimalPoly polys sN i
-                            --possiblePoly = getMinimalPoly (minimalPoly : (getPseudoRemainders polys sN i) ) sN i
-
-                    -- checkChainPoly obtiene el minimo polynomio entre los pseudoRemainders del polinomio candidato a ser añadido a la cadena y la cadena
-                    -- possiblePoly es el polynomio candidato a ser añadido a la cadena
-                    -- Si el possiblePoly no se puede dividir con respecto a ningun elemento de la cadena entonces, este pasa directamente a la cadena
-
-
-
---getMinimalPoly (possiblePoly: [checkChainPoly]) sN i
+                            --getMinimalPoly (possiblePoly: [checkChainPoly]) sN i
 
 --FUNCIONES NUEVAS--
 
@@ -156,9 +115,9 @@ maxDegrees (x:xs) (y:ys) = (max x y : maxDegrees xs ys)
 --Funcion que obtiene el lcmMonomial entre dos monomios expresados en arreglo de Int cada uno
 
 lcmMonomial' :: SNat n -> [Int] -> [Int] -> OrderedMonomial ord n
-lcmMonomial' n a b =
+lcmMonomial' n a b = 
     let monomList = maxDegrees a b
-    in toMonomial n monomList
+    in toMonomial n monomList 
 
 --Funcion que converte un arreglo de Int en un Monomio
 toMonomial :: SNat n -> [Int] -> OrderedMonomial ord n
@@ -167,7 +126,6 @@ toMonomial n a = orderMonomial Proxy (fromList n a)
 
 --Funcion que obtiene el leadingMonomial en terminos de arreglos de Int
 maxMonomial :: [[Int]] -> Int -> [Int]
-maxMonomial [] _ = []
 maxMonomial [a] _ = a
 maxMonomial (x:xs) n
     | (x!!n) > (maxMonomial xs n)!!n = x
@@ -176,7 +134,7 @@ maxMonomial (x:xs) n
 --Funcion que obtiene el leadingMonomial de forma algebraica
 leadingMonomial' :: (IsOrderedPolynomial poly, Field (Coefficient poly))
                     => poly -> SNat n -> Int -> OrderedMonomial ord n
-leadingMonomial' f n i =
+leadingMonomial' f n i = 
     let a = map (V.toList) (HS.toList (monomials f))
     in toMonomial n (maxMonomial a i)
 
@@ -190,17 +148,17 @@ leadingMonomial' f n i =
 p1 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p1 =
     let [x,y,z] = vars
-    in x^2  + y^2 + z^2 - 4
+    in x - y^2 +2*z
 
 p2 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p2 =
     let [x,y,z] = vars
-    in (x- 1 )^2 + (y)^2 + (z- 1 )^2 - 4
+    in x^2 - 13*y - 10*z
 
 p3 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p3 =
     let [x,y,z] = vars
-    in  (x)^2 + (y - 1 )^2 + (z)^2 - 4
+    in x^2 -12*y -13*z
 ---
 
 --Ideal 2
@@ -216,6 +174,18 @@ p5 =
 ------------------------------------------------------------------------------
 
 
+
+pol4 = polToList p4
+pol5 = polToList p5
+
+
+--leadMon1 = maxMonomial pol 1
+--maximoMonomio = indexMaxMonomial pol 1 
+-- maxi = maxMonomial pol 1
+-- indexMax = M.findIndex 3 p4
+
+sONE :: SNat 3
+sONE = sing
 
 --Nueva funcion sPolynomial en la cual se indica la variable con respecto a la cual se debe obtener el sPolynomial
 
@@ -250,37 +220,62 @@ sPolynomial' f g n i =
 
 
 -------- ZONA DE PREUBAS ---------------------
-numVar :: SNat 3
-numVar = sing
+--polInTerms = (getTerms p4)!!0
+chain = ascendentChain [p4,p5] [] sONE 0 2
+chain11 = fullAscendentChain [p4,p5] sONE 0
+--chainSpec = getMinimalPoly (invPseudoRemainders (ascendentChain [p4,p5] sONE 0 0) (chain!!1) sONE 1) sONE 1
+--pseubien = pseudoRemainder  p5 (chain!!1) sONE 1
+--pseu = invPseudoRemainders [(chain!!0)] (chain!!1) sONE 1
 
-valid_chain = ascendentChain [p1,p2,p3] [] numVar 0 3
--- PROBLEMA PSEUDOREMAINDER BUCLE INFINITO DIVISOR NECESITA FACTORIZACION
--- ERROR EN PSUEDO REMAINDER MINIMALPOLY POSSIBLEPOLY SN 0 IDEAL 2
+--pols = invPseudoRemainders[p1,p2,p3] sONE 0
 
--- P5 ENTRE SP(P4, P5)
-problem_chain = ascendentChain [p4,p5] [] numVar 0 2
-
---
--- chainAn = fullAscendentChain [p1,p2,p3] numVar 0
--- classp1 = classVarDeg p1 numVar 1
--- divisionp3p1 = pseudoRemainder p3 p1 numVar 0
--- pseudoRe = getPseudoRemainders [p3,p2,p1] numVar 0
--- minimal1 = getMinimalPoly pseudoRe numVar 0
-------------------------------------------------
+--indexMaxi = M.findIndex ld polInTerms
+--gt = getTerms' p4
+--spol1 = sPolynomial' (chain!!1) (chain!!0) sONE 1
+--spol2 = sPolynomial' spol1 (chain!!0) sONE 1
+--leadingp5 = leadingMonomial' p5 sONE 1
+--leadingTerm5 = leadingTerm' p5 sONE 1
+-- leadingTerm4 = leadingTerm' p4 sONE 1
+-- idxMax  =  indexMax p5 sONE 1
+-- h = (one, lcmp4p5)
+-- division =  toPolynomial (h `tryDiv` leadingTerm4) * p4
+-- ldp4 = maxMonomial pol4 0
+-- ldp5 = maxMonomial pol5 0
+-- lcmp4p5 = lcmMonomial' sONE ldp4 ldp5
 
 
 -----------------------------------------------------
 main :: IO()
 main = do
-    putStrLn "\n Ideal 1: \n"
-    print p1
-    print p2
-    print p3
-    putStrLn "\nCadena Ideal 1"
-    print valid_chain
-    putStrLn "--------------------------------------------------------------------------------------\n"
-    putStrLn "Ideal 2 \n "--  print chain1
-    print p4
-    print p5
-    putStrLn "\nCadena Ideal 2"
-    print problem_chain
+    -- print pol
+    -- print leadMon1
+    -- print maximoMonomio
+    -- putStrLn "lcm p4 p5 lista"
+    -- print lcmp4p5
+    -- --print ld
+    -- putStrLn "Indice"
+    -- print idxMax
+    -- putStrLn "Leading Term 5"
+    -- print leadingTerm5
+    -- print division
+    putStrLn "Cadena Mejorada"
+    print chain
+    putStrLn "Cadena Antigua"
+    print chain11
+    --print chainSpec
+    putStrLn "Termino que deberia ir"
+    --print pseubien
+--  print pseu
+--  print (classVarDeg (chain!!1) sONE 1)
+--  print (classVarDeg p5 sONE 1)
+--  print (sPolynomial' (chain!!1) (chain!!0) sONE 1)
+--  print (sPolynomial' (sPolynomial'  (chain!!1) (chain!!0) sONE 1) (chain!!0) sONE 1)
+-- print (pseudoRemainder (chain!!1) (chain!!0) sONE 1)
+-- print (leadingMonomialDegs p5 sONE 1)
+  --  print gt
+    --    print spol1
+  -- print spol2
+    --putStrLn "lcm p4 p5"
+    --print lcmp4p5
+    --putStrLn "Terms of pol"
+    --print polInTerms
