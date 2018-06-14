@@ -31,14 +31,6 @@ pseudoRemainder f g sN i
                 | otherwise = pseudoRemainder (sPolynomial' f g sN i) g sN i
 ------------------------------------------------------------------------
 
-
---pol :: OrderedPolynomial Rational Lex 3
-pol :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
-pol =
-    let [x,y,z] = vars
-    in x * y^2 + x^3 * y + x^3 * y^5 * z + x^3 * y^2 * z^7 + x^3 * y^2 * z^3
-
-
 -----------DEFINCION DE LAS FUNCIONES QUE OBTIENEN EL GRADO DE LA VARIABLE DE CLASE---------------
 --Returns the array of exponents of the leading monomial
 
@@ -227,7 +219,7 @@ p1 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p1 = x * y^2 + x^3 * y + x^3 * y^2 * z + x^3 * y^2 * z^2 + x^3 * y^2 * z^3
 
 p2 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
-p2 = z + 1
+p2 = z+1
 
 p3 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p3 = (x)^2 + (y - 1 )^2 + (z)^2 - 4
