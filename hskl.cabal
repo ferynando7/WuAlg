@@ -28,7 +28,8 @@ executable hskl
         unordered-containers -any,
         containers -any,
         lens -any,
-        sized -any
+        sized -any,
+        ListLike -any
        
   ghc-options: -ferror-spans
 

@@ -1,0 +1,4 @@
+	quite la funcion leadingMonomialDegs, la introduje dentro de classVarDeg
+	quité la funcion isEqualTo porque se puede comparar directamente dos polinomios f y g haciendo f == g. Esto debido a que los polinomios son instancias de la clase Eq
+
+	modifiqué la funcion getMinimalPoly y la funcion getDividendPolys

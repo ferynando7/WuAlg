@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude              #-}
 {-# LANGUAGE NoMonomorphismRestriction, QuasiQuotes, TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 import Algebra.Algorithms.Groebner
 import Algebra.Field.Finite
@@ -12,7 +13,7 @@ import Algebra.Ring.Polynomial.Labeled
 import Algebra.Ring.Polynomial.Monomial
 import qualified Data.Sized.Builtin       as V
 import qualified Data.Foldable            as F
-import qualified Data.Set as Set
+import qualified Data.Set                 as Set
 import qualified Data.HashSet             as HS
 import qualified Prelude                  as P
 import Control.Lens
@@ -32,46 +33,31 @@ pseudoRemainder f g sN i
 ------------------------------------------------------------------------
 
 -----------DEFINCION DE LAS FUNCIONES QUE OBTIENEN EL GRADO DE LA VARIABLE DE CLASE---------------
---Returns the array of exponents of the leading monomial
-
-leadingMonomialDegs :: (IsOrder n order, KnownNat n , Eq k, IsMonomialOrder n order, Euclidean k, Division k)
-       => OrderedPolynomial k order n -> SNat n -> Int -> [Int]
-leadingMonomialDegs f sN i = V.toList ( getMonomial  (leadingMonomial'' f sN i))
-
 
 --Returns the degree of the class variable
 classVarDeg :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
         => OrderedPolynomial k order n  -> SNat n -> Int -> Int
-classVarDeg f sN i =  (leadingMonomialDegs f sN i) !! i
+classVarDeg pol nat pos =  leadingMonomialDegs !! pos
+        where 
+                leadingMonomialDegs = V.toList $ getMonomial $ leadingMonomial'' pol nat pos
 ---------------------------------------------------------------
 
 ------FUNCIONES PARA ACTUALIZAR LA CADENA ASCENDENTE----------------
 --Funcion que obtiene el minimo polinomio con respecto a la variable de clase.
 --Esto es util para saber para cual polinomio dividir
-getMinimalPoly:: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+getMinimalPoly ::(IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
         => [OrderedPolynomial k order n] -> SNat n -> Int -> OrderedPolynomial k order n
-getMinimalPoly [f] _ _ = f
-getMinimalPoly (x:xs) sN i
-    | classVarDeg x sN i == 0 = getMinimalPoly xs sN i
-    | classVarDeg (getMinimalPoly xs sN i) sN i == 0 = x
-    | classVarDeg x sN i <= classVarDeg (getMinimalPoly xs sN i) sN i = x
-    | otherwise = getMinimalPoly xs sN i
-
-
---Funcion que compara dos polinomios
-isEqualTo :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
-        => OrderedPolynomial k order n -> OrderedPolynomial k order n -> Bool
-isEqualTo f g
-    | f == g = True
-    | otherwise = False
-
+getMinimalPoly pols nat pos = foldl1 foo pols
+                where
+                        foo = \acc pol -> if classVarDeg pol nat pos < classVarDeg acc nat pos && classVarDeg pol nat pos>0 then pol else acc
 
 --Funcion que obtiene los polinomios que seran los divisores
-getDividendPolys::(IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+getDividendPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
         => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
-getDividendPolys (x:xs) sN i
-    | isEqualTo x (getMinimalPoly (x:xs) sN i) = xs
-    | otherwise = (x: getDividendPolys xs sN i)
+getDividendPolys pols nat pos = filter notMinPol pols
+                        where
+                                notMinPol = \pol -> pol /= getMinimalPoly pols nat pos
+
 
 ------------------FUNCION QUE OBTIENE LOS PSEUDOREMAINDERS DE UN CONJUNTO DE POLINOMIOS
 getPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
@@ -103,7 +89,6 @@ ascendentChain polys [] sN i p
                            possiblePoly = getMinimalPoly (minimalPoly : (getPseudoRemainders polys sN i) ) sN i
                            pseudos = map (\p -> if p == possiblePoly && minimalPoly /= possiblePoly then pseudoRemainder minimalPoly possiblePoly sN i else p) (getPseudoRemainders polys sN (i))
 ascendentChain polys pseudos sN i p
---                    | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys (getPseudoRemainders pseudos sN i) sN (i+1) p)
                     | i < p && i /= 0 =  (checkChainPoly : ascendentChain polys pseudos1 sN (i+1) p)
                     | i >= p  =  []
                     -- En caso de que i == p entonces paramos la funcion
@@ -132,6 +117,7 @@ maxDegrees (x:xs) (y:ys) = (max x y : maxDegrees xs ys)
 
 --Funcion que obtiene el lcmMonomial entre dos monomios expresados en arreglo de Int cada uno
 
+
 lcmMonomial' :: SNat n -> [Int] -> [Int] -> OrderedMonomial ord n
 lcmMonomial' n a b =
     let monomList = maxDegrees a b
@@ -146,9 +132,8 @@ leadingTerm'' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Eu
         => OrderedPolynomial k order n -> SNat n -> Int -> (k, OrderedMonomial order n)
 leadingTerm'' pol nat pos = (snd &&& fst) $ fromJust $ M.lookupLE chosenTerm (_terms pol)
         where
-                chosenTerm = toMonomial nat (foldr foo firstTerm polToList)
+                chosenTerm = toMonomial nat (foldr1 foo polToList)
                 polToList = map (V.toList . getMonomial) (M.keys $ _terms pol)
-                firstTerm = polToList!!0
                 foo = \monomCoeffs acc -> if monomCoeffs!!pos > acc!!pos then monomCoeffs else acc
 
 leadingMonomial'' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
@@ -214,6 +199,20 @@ numVarD :: SNat 2
 numVarD = sing
 
 [x,y,z] = vars
+
+pp1 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
+pp1 = x*y
+
+pp2 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
+pp2 = x^2*y
+
+pp3 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
+pp3 = x*y^2
+
+pp4 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
+pp4 = x*y + x 
+
+
 
 p1 :: OrderedPolynomial Rational (ProductOrder 1 2 Lex Lex) 3
 p1 = x * y^2 + x^3 * y + x^3 * y^2 * z + x^3 * y^2 * z^2 + x^3 * y^2 * z^3
@@ -298,9 +297,11 @@ monIde =
 sNine :: SNat 9
 sNine = sing
 
+
 main :: IO()
 main = do
-    putStrLn "\n Chain 2D"
-    print problem_chain
-    putStrLn "\n Chain Cuadrics"
-    print chainq
+--     putStrLn "\n Chain 2D"
+--     print problem_chain
+--     putStrLn "\n Chain Cuadrics"
+--     print chainq
+        print chainq
