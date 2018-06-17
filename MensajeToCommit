@@ -1,7 +1,0 @@
-	Quite la funcion leadingMonomialDegs, la introduje dentro de classVarDeg
-	Quité la funcion isEqualTo porque se puede comparar directamente dos polinomios f y g haciendo f == g. Esto debido a que los polinomios son instancias de la clase Eq
-	Modifiqué la funcion getMinimalPoly y la funcion getDividendPolys
-	Eliminé las funciones lcmMonomial' y la funcion maxDegrees que es usada en lcmMonomial'
-	Edité la funcion gcdPolynomial
-	He creado la funcion (//) que intentará dividir un polinomio por un monomio
-	He modificado la funcion simplify usando la funcion (//)
