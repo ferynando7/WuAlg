@@ -135,7 +135,7 @@ leadingCoeff' pol nat pos = fst $ leadingTerm' pol nat pos
 -- Funcion que calcula el spolynomial factorizando y simplificando el resultado
 sPolynomial' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
            => OrderedPolynomial k order n  -> OrderedPolynomial k order n  -> SNat n -> Int -> OrderedPolynomial k order n
-sPolynomial' f g n i = simplify (toPolynomial (h `tryDiv` (one, commonLeadf )) * (simplify factorsg 0) * f - toPolynomial (h `tryDiv` (one, commonLeadg ) ) * (simplify factorsf 0)* g) 0
+sPolynomial' f g n i = simplify (toPolynomial (h `tryDiv` (one, commonLeadf )) * (simplify factorsg) * f - toPolynomial (h `tryDiv` (one, commonLeadg ) ) * (simplify factorsf)* g)
                       where
                         h = (one, lcmMonomial (leadingMonomial' f n i) (leadingMonomial' g n i) )
                         factorsg = chooseTerms g indexesg i
@@ -156,9 +156,9 @@ chooseTerms pol idxs pos = foldl foo 0 idxs
                                 auxMonom = \poly idx -> M.elemAt idx $ _terms poly
 
 -- Funcion que permite simplificar un polinomio en caso de que este tenga una expresion en commun en todos los monomios.
-simplify' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+simplify :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
-simplify' pol  = pol // gcdPolynomial' pol
+simplify pol  = pol // gcdPolynomial' pol
 
 -- Funcion que intentará dividir un polinomio por un monomio
 (//) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
