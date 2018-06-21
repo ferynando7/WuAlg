@@ -127,6 +127,7 @@ extra-deps:
 - vector-0.11.0.0
 - unordered-containers-0.2.8.0
 - containers-0.5.7.1
+- ListLike-4.5.1
 
 - control-monad-loop-0.1
 - ghc-typelits-natnormalise-0.5.2
