@@ -29,11 +29,25 @@ import Data.Maybe                         (fromJust)
 
 
 
-type Polynomial' n = OrderedPolynomial Rational (ProductOrder 1 (n-1) Lex Lex) n
+type Polynomial' n = OrderedPolynomial Integer (ProductOrder 1 (n-1) Lex Lex) n
 
 ---------------DEFINICION DE LA FUNCION PSEUDOREMAINDER-----------------------------
 
-pseudoRemainder :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+
+--Genera un polinomio del tipo p(x1,x2,...xn) = xi^k
+mon :: SNat n -> Int -> Int -> OrderedMonomial order n
+mon nat var exp = toMonomial nat exps
+        where 
+                zeros = replicate (sNatToInt nat) 0
+                exps = insertAt var exp zeros
+
+insertAt :: Int -> Int-> [Int] -> [Int] 
+insertAt z y xs = as ++ (y:(tail bs))
+                        where (as,bs) = splitAt z xs
+------
+
+-------------
+pseudoRemainder :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
                     => SNat n -> Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
 pseudoRemainder sN var g f
                 | classVarDeg f sN var < classVarDeg g sN var || classVarDeg g sN var == 0 = f
@@ -53,7 +67,7 @@ sortPolys (x:xs) =
 -----------DEFINCION DE LAS FUNCIONES QUE OBTIENEN EL GRADO DE LA VARIABLE DE CLASE---------------
 
 --Returns the degree of the class variable
-classVarDeg :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+classVarDeg :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n  -> SNat n -> Int -> Int
 classVarDeg pol nat var =  leadingMonomialDegs !! var
         where 
@@ -64,28 +78,32 @@ classVarDeg pol nat var =  leadingMonomialDegs !! var
 --Funcion que obtiene el minimo polinomio con respecto a la variable de clase.
 --Esto es util para saber para cual polinomio dividir
 
-minimalPolyWithVar ::(IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k, Division k)
+minimalPolyWithVar ::(IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
          => [OrderedPolynomial k order n] -> SNat n -> Int -> OrderedPolynomial k order n
 minimalPolyWithVar pols nat var 
         | listOfPossiblePolys == [] = minimalPoly pols
         | otherwise = minimalPoly listOfPossiblePolys
         where listOfPossiblePolys = filter (varInPoly nat var) pols
 
-varInPoly :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+varInPoly :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => SNat n -> Int -> OrderedPolynomial k order n -> Bool
 varInPoly nat var pol 
         | classVarDeg pol nat var == 0 = False
         | otherwise = True 
 
+varInPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
+        => SNat n -> Int -> [OrderedPolynomial k order n] -> Int
+varInPolys nat var pols = foldl foo 0 pols
+                where foo = \acc pol -> if varInPoly nat var pol then acc + 1 else acc
 
-minimalPoly :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k, Division k)
+minimalPoly :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n
 minimalPoly pols = foldl1 (\acc pol -> if acc << pol then acc else pol) pols
                 
 
 
 --Funcion que obtiene los polinomios que seran los divisores
-dividendPolys :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k, Division k)
+dividendPolys :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
         => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
 dividendPolys pols nat var = filter notMinPol pols
                         where
@@ -95,36 +113,75 @@ dividendPolys pols nat var = filter notMinPol pols
 
 
 ------------------FUNCION QUE OBTIENE LOS PSEUDOREMAINDERS DE UN CONJUNTO DE POLINOMIOS
-getPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k, Division k)
+getPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
 getPseudoRemainders pols nat var = map (pseudoRemainder nat var divisor) dividens
         where 
                 divisor = minimalPolyWithVar pols nat var
                 dividens = dividendPolys pols nat var
 
----------FUNCION QUE OBTIENE LA CADENA ASCENDENTE-------
-ascendentChain :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k, Division k)
-        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  ->  [OrderedPolynomial k order n] -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
+---------FUNCION QUE OBTIENE LA CADENA ASCENDENTE (Intento fallido...)-------
+
+ascChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
+ascChain [] chain _ _ = chain
+ascChain [a] chain nat var = getNewChain chain a nat var
+ascChain ideal [] nat var = ascChain newIdeal newChain nat (var+1)
+        where
+                newIdeal = getNewIdeal pseudos divisor minPoly nat var
+                newChain = getNewChain [] divisor nat var
+                pseudos = map (pseudoRemainder nat var minPoly) dividends
+                minPoly = minimalPolyWithVar ideal nat var
+                dividends = dividendPolys ideal nat var
+                divisor = minimalPolyWithVar (minPoly:pseudos) nat var
+ascChain ideal chain nat var = ascChain newIdeal newChain nat (var+1)
+
+        where
+                minPoly = minimalPolyWithVar ideal nat var
+                dividends = dividendPolys ideal nat var
+                pseudos = map (pseudoRemainder nat var minPoly) dividends
+                divisor = minimalPolyWithVar (pseudos) nat var
+                newChain = getNewChain chain divisor nat var
+                newIdeal = getNewIdeal pseudos divisor (newChain!!0) nat var
+
+getNewIdeal :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
+getNewIdeal oldIdeal divisor elemChain nat var = map (\a -> if a == divisor && divisor /= elemChain then pseudoRemainder nat var divisor elemChain else a) oldIdeal 
+        
+--chain, divisor
+getNewChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] ->  OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
+getNewChain [] divisor nat var = [divisor]
+getNewChain chain divisor nat var = (minInvs:invPseudos) 
+        where
+                invPseudos = invPseudoRemainders chain divisor nat var
+                minInvs = minimalPolyWithVar (invPseudos) nat var
+
+----------------------------- FIN DE INTENTO FALLIDO
+
+
+
+
+
+
+ascendentChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  ->  [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
 -- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
-ascendentChain polys [a] _ sN var p = [a]
-  --[minimalPoly (invPseudoRemainders (ascendentChain polys [] sN 0 (i-1)) a sN i) sN i]
-ascendentChain polys [] [] sN var p
-                    | var == 0 && var == p = [possiblePoly ]
-                    | var == 0 =  (possiblePoly: ascendentChain polys pseudos [possiblePoly] sN (var+1) p)
-                    | var >= p  =  []
-                    where  minPoly = minimalPolyWithVar polys sN var
-                           possiblePoly = minimalPolyWithVar (minPoly : (getPseudoRemainders polys sN var) ) sN var
-                           pseudos = map (\p -> if p == possiblePoly && minPoly /= possiblePoly then pseudoRemainder sN var possiblePoly minPoly else p) (getPseudoRemainders polys sN var)
-ascendentChain polys pseudos oldChain sN var p
-                    | var < p && var /= 0 =  (checkChainPoly : ascendentChain polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1) p)
-                    | var >= p  =  []
-                    -- En caso de que var == p entonces paramos la funcion
-                    where   checkChainPoly = minimalPolyWithVar (invPseudoRemainders oldChain possiblePoly sN var) sN var
-                            possiblePoly = minimalPolyWithVar pseudos sN var
-                            pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder sN var possiblePoly checkChainPoly else p) (getPseudoRemainders pseudos sN var)
+ascendentChain polys [a] _ sN var  = [a]
+ascendentChain polys [] [] sN var  =  (possiblePoly: ascendentChain polys pseudos [possiblePoly] sN (var+1))
+        where  
+                minPoly = minimalPolyWithVar polys sN var
+                possiblePoly = minimalPolyWithVar (minPoly : (getPseudoRemainders polys sN var) ) sN var
+                pseudos = map (\p -> if p == possiblePoly && minPoly /= possiblePoly then pseudoRemainder sN var possiblePoly minPoly else p) (getPseudoRemainders polys sN var)
+ascendentChain polys pseudos oldChain sN var =  (checkChainPoly : ascendentChain polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1))
+                -- En caso de que var == p entonces paramos la funcion
+        where   
+                checkChainPoly = minimalPolyWithVar (invPseudoRemainders oldChain possiblePoly sN var) sN var
+                possiblePoly = minimalPolyWithVar pseudos sN var
+                pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder sN var possiblePoly checkChainPoly else p) (getPseudoRemainders pseudos sN var)                
 
 --FUNCIONES NUEVAS--
-invPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+invPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
 invPseudoRemainders pols pol nat var = map (foo nat var pol) pols
                 where
@@ -136,7 +193,7 @@ toMonomial :: SNat n -> [Int] -> OrderedMonomial ord n
 toMonomial n a = orderMonomial Proxy (fromList n a)
 
 
-leadingTerm' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+leadingTerm' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n -> SNat n -> Int -> (k, OrderedMonomial order n)
 leadingTerm' pol nat var = (snd &&& fst) $ fromJust $ M.lookupLE chosenTerm (_terms pol)
         where
@@ -144,29 +201,32 @@ leadingTerm' pol nat var = (snd &&& fst) $ fromJust $ M.lookupLE chosenTerm (_te
                 polToList = map (V.toList . getMonomial) (M.keys $ _terms pol)
                 foo = \monomCoeffs acc -> if monomCoeffs!!var > acc!!var then monomCoeffs else acc
 
-leadingMonomial' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+leadingMonomial' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n -> SNat n -> Int -> OrderedMonomial order n
 leadingMonomial' pol nat var = snd $ leadingTerm' pol nat var
 
-leadingCoeff' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+leadingCoeff' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n -> SNat n -> Int -> k
 leadingCoeff' pol nat var = fst $ leadingTerm' pol nat var
 
-
+leadingAlgCoeff' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => OrderedPolynomial k order n -> SNat n -> Int -> (k, OrderedMonomial order n)
+leadingAlgCoeff' pol nat var = (leadingTerm' pol nat var) `tryDiv'` (1, mon nat var degVar)
+                where degVar = classVarDeg pol nat var
 -- Funcion que calcula el spolynomial factorizando y simplificando el resultado
-sPolynomial' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+sPolynomial' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
            => OrderedPolynomial k order n  -> OrderedPolynomial k order n  -> SNat n -> Int -> OrderedPolynomial k order n
-sPolynomial' f g n i = simplify (toPolynomial (h `tryDiv` (one, commonLeadf )) * (simplify factorsg) * f - toPolynomial (h `tryDiv` (one, commonLeadg ) ) * (simplify factorsf)* g)
+sPolynomial' f g n i = simplifyTerm (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
                       where
                         h = (one, lcmMonomial (leadingMonomial' f n i) (leadingMonomial' g n i) )
                         factorsg = chooseTermsWithVar g n i
                         factorsf = chooseTermsWithVar f n i
-                        commonLeadf = commonFactor factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
-                        commonLeadg = commonFactor factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
+                        commonLeadf = commonMonomial factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
+                        commonLeadg = commonMonomial factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
 
 
 
-chooseTermsWithVar :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+chooseTermsWithVar :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n -> SNat n -> Int -> OrderedPolynomial k order n
 chooseTermsWithVar pol sN var
                 | not $ varInPoly sN var pol = chooseTermsWithVar pol sN (var + 1)
@@ -188,155 +248,131 @@ chooseTermsWithList pol idxs var = foldl foo 0 idxs
 
 
                         -- Funcion que permite simplificar un polinomio en caso de que este tenga una expresion en commun en todos los monomios.
-simplify :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+simplifyMonomial :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
-simplify pol  = pol // commonFactor pol
+simplifyMonomial pol = pol // (1, commonMonomial pol)
+
+simplifyTerm :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => OrderedPolynomial k order n -> OrderedPolynomial k order n
+simplifyTerm pol  = pol // (commonCoeff pol, commonMonomial pol)
+
 
 -- Funcion que intentará dividir un polinomio por un monomio
-(//) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
-         => OrderedPolynomial k order n  -> OrderedMonomial order n -> OrderedPolynomial k order n
-pol // mon = sum $ map toPolynomial $ map (`tryDiv` (one, mon)) (map (snd &&& fst) terms)
+(//) :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+         => OrderedPolynomial k order n  -> (k, OrderedMonomial order n) -> OrderedPolynomial k order n
+pol // (coeff, mon) = sum $ map toPolynomial $ map (`tryDiv'` (coeff, mon)) (map (snd &&& fst) terms)
          where  
                  terms = M.toList $ _terms pol
 
+tryDiv' :: (Integral r) => (r, OrderedMonomial ord n) -> (r, OrderedMonomial ord n) -> (r, OrderedMonomial ord n)
+tryDiv' (a, f) (b, g)
+        | g `divs` f = (a `div` b, OrderedMonomial $ V.zipWithSame (-) (getMonomial f) (getMonomial g))
+        | otherwise  = error "cannot divide."
+
+
 -- Funcion que obtiene el gcd de un polinomio, en este caso se refiere al termino en comun de todos los monomios que conforman el polinomio
-commonFactor :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k)
+commonMonomial :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n  -> OrderedMonomial order n
-commonFactor pol  = foldl1 foo terms
+commonMonomial pol  = foldl1 foo monomials
                         where
-                                foo = \acc term -> gcdMonomial acc term
-                                terms = M.keys $ _terms pol 
+                                foo = \acc monomial -> gcdMonomial acc monomial
+                                monomials = M.keys $ _terms pol 
+
+commonCoeff :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => OrderedPolynomial k order n -> k
+commonCoeff pol  = foldl1 foo coeffs
+                where
+                        foo = \acc coeff -> gcdCoeff acc coeff
+                        coeffs = M.elems $ _terms pol 
+                        
+gcdCoeff :: (Integral a) => a -> a -> a
+gcdCoeff a b
+        | abs a > abs b = if b == 0 then abs a else abs $ gcdCoeff b $ a `mod` b
+        | otherwise = if a == 0 then abs b else abs $ gcdCoeff a $ b `mod` a
 
 
-(<<) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k, Ord k)
+
+(<<=) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Ord k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n -> Bool
-pol1 << pol2 = foldl1 (\acc bol -> acc && bol) bools
+pol1 <<= pol2 = foldl1 (\acc bol -> acc && bol) bools
         where
         termsP1 = reverse $ M.toList $ _terms pol1
         termsP2 = reverse $ M.toList $ _terms pol2
         bools = zipWith (\x y -> x <= y) termsP1 termsP2
                     
-(<<=) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k, Ord k)
+(<<) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Ord k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n -> Bool
-pol1 <<=  pol2 = pol1 << pol2 || pol1 == pol2
+pol1 <<  pol2 = pol1 <<= pol2 && not (pol1 == pol2)
 
-(>>) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k, Ord k)
+(>>) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Ord k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n -> Bool
 pol1 >>  pol2 = not (pol1 <<= pol2)
 
-(>>=) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Division k, Ord k)
+(>>=) :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Ord k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n -> Bool
 pol1 >>=  pol2 = not (pol1 << pol2)
 
 
--------- ZONA DE PREUBAS ---------------------
+
 sThree :: SNat 3
 sThree = sing
 
-sTwo :: SNat 2
-sTwo = sing
+sFour :: SNat 4
+sFour = sing
 
-[x,y,z] = vars
+sFive :: SNat 5
+sFive = sing
 
-pp1 :: Polynomial' 3
-pp1 = x*y
+sSix :: SNat 6
+sSix = sing
 
-pp2 :: Polynomial' 3
-pp2 = x^2*y
+sNine :: SNat 9
+sNine = sing
 
-pp3 ::  Polynomial' 3
-pp3 = x*y^2
+[x,y,v,l1,l2,x1,y1,x2,y2] = vars
 
-pp4 ::  Polynomial' 3
-pp4 = x*y + x 
+--Circulo: (x-2)^(2)+ (y+5)^(2) - 4 
+p1 :: Polynomial' 9
+p1 =  (x-2)^(2)+ (y+5)^(2) - (2-v)^2
 
-pp5 ::  Polynomial' 3
-pp5 = x^2 + z + 1
+--Circulo: p2 =  (x+3)^(2)+ (y)^(2)  - 9
+p2 :: Polynomial' 9
+p2 =  (x+3)^(2) + (y)^(2)  - (3-v)^2
 
-pp6 ::  Polynomial' 3
-pp6 = x^2 + z + 5
+--Circulo: (x-4)^(2)+ (y)^(2) - 1
+p3 :: Polynomial' 9
+p3 =  (x-4)^(2)+ (y)^(2)  - (1-v)^2
 
-pp7 ::  Polynomial' 3
-pp7 = x^2*y
+--Parabola: (x-4)^(2) - y - 1
+p4 :: Polynomial' 9
+p4 = x - x1 - l1*(2*x1-8)
 
-pp8 ::  Polynomial' 3
-pp8 =  y + 9
+p5 :: Polynomial' 9
+p5 = y - y1 + l1
 
+p6 :: Polynomial' 9
+p6 = (l1*(2*x1-8))^2 + (l1)^2 - v^2
 
+p7 :: Polynomial' 9
+p7 = (x1-4)^2 - y1 - (1)
 
-p1 ::  Polynomial' 3
-p1 = x * y^2 + x^3 * y + x^3 * y^2 * z + x^3 
+p47 = [p4,p5,p6,p7]
 
-p2 ::  Polynomial' 3
-p2 = z+1
+--Parabola: (y+5)^2 - x - 5
+p8 :: Polynomial' 9
+p8 = x - x2 + l2
 
-p3 ::  Polynomial' 3
-p3 = (x)^2 + (y - 1 )^2 + (z^2) - 4 + z
+p9 :: Polynomial' 9
+p9 = y - y2 - l2*(2*y2+10)
 
----------------------------------------------------------------------------------
+p10 :: Polynomial' 9
+p10 = (x-x2)^2 + (y-y2)^2 - v^2
 
---Ideal 2---------------------------------------------------------------------
-p4 ::  Polynomial' 3
-p4 = y^2 - x^2 - x^3
+p11 :: Polynomial' 9
+p11 = (y2+5)^2 - x2 - (5)
 
-p5 ::  Polynomial' 3
-p5 = x^2 + y^2 -1
+p811 = [p8,p9,p10,p11]
 
-p6 ::  Polynomial' 3
-p6 = y*x^2 + 2*x^2  + 5*y*x^2
-------------------------------------------------------------------------------
-
-
-
-------------------------PROJECT-QUADRICS---------------------------
-q1 ::  Polynomial' 3
-q1 = x^2 +y^2 +(z+5)^2 -25
-
-q2 ::  Polynomial' 3
-q2 = x^2 + y^2 + (z-5)^2 -1
-
-q3 ::  Polynomial' 3
-q3 = x^2 + (y-5)^2 + z^2 - 4
-
-
-q4 ::  Polynomial' 3
-q4 = (x-5)^2 + (y+3)^2 + (z-2)^2  -9
-------------------------PROJECT----------------------------
-
-
-
------------------------------------------------------
-
--------------------FERCHO----------------------------------
-
-[x1,y1,x2,y2,xc,yc,l1,l2,r] = vars
-
-f1 ::  Polynomial' 9
-f1 = 3*(x1-2)^2 + 20*y1^2 - 6
-
-f2 ::  Polynomial' 9
-f2 = (x2-6)^2 + y2^2 - 1
-
-f3 ::  Polynomial' 9
-f3 = x1 + l1*(6*x1 -12) -xc
-
-f4 ::  Polynomial' 9
-f4 = y1 + l1*(40*y1) - yc
-
-f5 ::  Polynomial' 9
-f5 = x2 + l2*(2*x2 -12) -xc
-
-f6 ::  Polynomial' 9
-f6 = y2 + l2*(2*y2) - yc
-
-f7 ::  Polynomial' 9
-f7 = 17*yc^2 + 24*xc -99
-
-f8 ::  Polynomial' 9
-f8 = (xc-x1)^2 + (yc-y1)^2 -r^2
-
-f9 ::  Polynomial' 9
-f9 = (xc-x2)^2 + (yc-y2)^2 -r^2
 
 
 
@@ -344,9 +380,6 @@ monIde ::  Polynomial' 9
 monIde =
     let [x1,y1,x2,y2,xc,yc,l1,l2,r] = vars
     in 1
-
-sNine :: SNat 9
-sNine = sing
 
 
 
@@ -383,6 +416,3 @@ main = do
         print p1
 
 
-
---modifiqué la funcion getPseudoRemainders
---modifiqué la firma de la funcion pseudoRemainder
