@@ -167,18 +167,39 @@ getNewChain chain divisor nat var = (minInvs:invPseudos)
 ascendentChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  ->  [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
 -- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
-ascendentChain polys [a] _ sN var  = [a]
-ascendentChain polys [] [] sN var  =  (possiblePoly: ascendentChain polys pseudos [possiblePoly] sN (var+1))
+ascendentChain polys [a] _ sN var = [a]
+ascendentChain polys [] [] sN var =  (possiblePoly: ascendentChain polys pseudos [possiblePoly] sN (var+1))
         where  
                 minPoly = minimalPolyWithVar polys sN var
                 possiblePoly = minimalPolyWithVar (minPoly : (getPseudoRemainders polys sN var) ) sN var
                 pseudos = map (\p -> if p == possiblePoly && minPoly /= possiblePoly then pseudoRemainder sN var possiblePoly minPoly else p) (getPseudoRemainders polys sN var)
-ascendentChain polys pseudos oldChain sN var =  (checkChainPoly : ascendentChain polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1))
+ascendentChain polys pseudos oldChain sN var =  (checkChainPoly : ascendentChain polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1) )
                 -- En caso de que var == p entonces paramos la funcion
         where   
                 checkChainPoly = minimalPolyWithVar (invPseudoRemainders oldChain possiblePoly sN var) sN var
                 possiblePoly = minimalPolyWithVar pseudos sN var
                 pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder sN var possiblePoly checkChainPoly else p) (getPseudoRemainders pseudos sN var)                
+
+
+ascendentChainWithConstants :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  ->  [OrderedPolynomial k order n] -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
+        -- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
+ascendentChainWithConstants polys [a] _ sN var lim = [a]
+ascendentChainWithConstants _ _ _ _ _ 0 = []
+ascendentChainWithConstants polys [] [] sN var lim =  (possiblePoly: ascendentChainWithConstants polys pseudos [possiblePoly] sN (var+1) (lim-1))
+        where  
+                minPoly = minimalPolyWithVar polys sN var
+                possiblePoly = minimalPolyWithVar (minPoly : (getPseudoRemainders polys sN var) ) sN var
+                pseudos = map (\p -> if p == possiblePoly && minPoly /= possiblePoly then pseudoRemainder sN var possiblePoly minPoly else p) (getPseudoRemainders polys sN var)
+ascendentChainWithConstants polys pseudos oldChain sN var lim =  (checkChainPoly : ascendentChainWithConstants polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1) (lim-1))
+        -- En caso de que var == p entonces paramos la funcion
+        where   
+                checkChainPoly = minimalPolyWithVar (invPseudoRemainders oldChain possiblePoly sN var) sN var
+                possiblePoly = minimalPolyWithVar pseudos sN var
+                pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder sN var possiblePoly checkChainPoly else p) (getPseudoRemainders pseudos sN var)                
+
+
+
 
 --FUNCIONES NUEVAS--
 invPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
@@ -373,6 +394,19 @@ p11 = (y2+5)^2 - x2 - (5)
 
 p811 = [p8,p9,p10,p11]
 
+---- SIMBOLICO----
+
+[xx,yy,a,b,c,d,e,g] = vars
+
+sEight :: SNat 8
+sEight = sing
+
+
+p12 :: Polynomial' 8
+p12 = a*yy^2 + b*xx^2 + c*xx^3
+
+p13 :: Polynomial' 8
+p13 = d*yy^2 + e*xx^2 + g
 
 
 
