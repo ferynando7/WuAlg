@@ -30,161 +30,90 @@ sNine = sing
 
 sTwelve :: SNat 12
 sTwelve = sing
---[x,y,v,l1,x1,y1,l2,x2,y2] = vars
 
--- [x,y,v,l1,x1,y1] = vars
-
---Circulo: (x-2)^(2)+ (y+5)^(2) - 4 
---p1 :: Polynomial' 9
---p1 =  (x-2)^(2)+ (y+5)^(2) - (2-v)^2
-
--- --Circulo: p2 =  (x+3)^(2)+ (y)^(2)  - 9
--- p2 :: Polynomial' 9
--- p2 =  (x+3)^(2) + (y)^(2)  - (3-v)^2
-
--- -- --Circulo: (x-4)^(2)+ (y)^(2) - 1
--- -- p3 :: Polynomial' 9
--- -- p3 =  (x-4)^(2)+ (y)^(2)  - (1-v)^2
-
--- --Parabola: (x-4)^(2) - y - 1
--- p4 :: Polynomial' 9
--- p4 = x - x1 - l1*(2*x1-8)
-
--- p5 :: Polynomial' 9
--- p5 = y - y1 + l1
-
--- p6 :: Polynomial' 9
--- p6 = (l1*(2*x1-8))^2 + (l1)^2 - v^2
-
--- p7 :: Polynomial' 9
--- p7 = (x1-4)^2 - y1 - (1)
-
--- p47 = [p4,p5,p6,p7]
-
--- --Parabola: (y+5)^2 - x - 5
--- p8 :: Polynomial' 9
--- p8 = x - x2 + l2
-
--- p9 :: Polynomial' 9
--- p9 = y - y2 - l2*(2*y2+10)
-
--- p10 :: Polynomial' 9
--- p10 = (x-x2)^2 + (y-y2)^2 - v^2
-
--- p11 :: Polynomial' 9
--- p11 = (y2+5)^2 - x2 - (5)
-
--- p811 = [p8,p9,p10,p11]
+sTwenty :: SNat 20
+sTwenty = sing
 
 
-------------------
--------------
--------3D
-
--- [x,y,z,v,l1,x1,y1,z1,l2,x2,y2,z2] = vars
-
--- -- Esfera: x^2 + y^2 + z^2 - 4
--- -- p1 :: LabPolynomial (Polynomial' 8) '["x","y","z","v","l1","x1","y1","z1"]
--- p1 :: Polynomial' 12
--- p1 =  (x-5)^2 + (y-5)^2 + (z-3)^2  - (2 - v)^2
-
--- --Esfera: (x-10)^2 + y^2 + (z-10)^2 - 25
--- p2 :: Polynomial' 12
--- p2 =  (x-10)^2 + y^2 + (z-10)^2 - (5 - v)^2
-
--- --Paraboloid: 3*(x-6)^2 + 2(y+2)^2 + 6z
---  -- Grad x
--- p3 :: Polynomial' 12
--- p3 =  x - x1 - l1 * 6 * (x1-6)
-
--- --Grad y
--- p4 :: Polynomial' 12
--- p4 = y - y1 - l1 * 4 * (y1+2)
-
--- -- Grad z
--- p5 :: Polynomial' 12
--- p5 = z - z1 - l1 * 6
-
--- -- Sphere of distance
-
--- p6 :: Polynomial' 12
--- p6 = (x-x1)^2 + (y-y1)^2 + (z-z1)^2 - v^2
-
--- p7 :: Polynomial' 12
--- p7 = 3*(x1-6)^2 + 2*(y1+2)^2 + 6*z1
-
--- -- Hyperboloid":   3*(x+8)^2 - 2*y^2 + 3*z^2 - 6
--- p8 :: Polynomial' 12
--- p8 = 3*(x2 + 8)^2 - 2*y2^2 + 3*z2^2 - 6
-
--- -- Grad x
--- p9 :: Polynomial' 12
--- p9 = x - x2 - l2 * 6 *(x2+8)
-
--- -- Grad y
--- p10 :: Polynomial' 12
--- p10 = y -y2 + l2 * 4 * y2
-
--- -- Grad z
--- p11 :: Polynomial' 12
--- p11 = z - z2 - l2 * 6 * z2
-
--- p12 :: Polynomial' 12
--- p12 = (x-x2)^2 + (y-y2)^2 + (z-z2)^2 - v^2
+x = var 0
+y= var 1
+z= var 2
+v= var 3
+l1= var 4
+l2= var 5
+l3= var 6
+l4= var 7
+x1= var 8
+y1= var 9
+z1= var 10
+x2= var 11
+y2= var 12
+z2= var 13
+x3= var 14
+y3= var 15
+z3= var 16
+x4= var 17
+y4= var 18
+z4= var 19
 
 
+q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12,q13,q14,q15,q16,q17,q18,q19,q20 :: Polynomial' 9
+-- First Cuadric
+---------------------------------------------------
+-- grad x
+q1 = x - x1 - l1*(2 * 3* x1 + 11*y1 + 13 *z1 + 19 )
+-- grad y
+q2 = y - y1 - l1*(2 * 5* y1 + 11*x1 + 17 *z1 + 23 )
+-- grad z
+q3 = z - z1 - l1*(2 * 7* z1 + 11*x1 + 17 *z1 + 29 )
+-- distance
+q4 = (x-x1)^2 + (y-y1)^2 + (z-z1)^2 - v^2
+-- Quadic
+q5 = 3 * x1^2 + 5*y1^2 +7*z1^2 + 11*x1*y1 + 13*x1*z1 + 17 *y1 *z1 + 19*x1 + 23*y1 + 29 *z1 +31
+---------------------------------------------------
+-- Second Quadric
+---------------------------------------------------
+-- grad x
+q6= x - x2 - l2*(2 * 37* x2 + 47*y2 + 53 *z2 + 61 )
+-- grad y
+q7 = y - y2 - l2*(2 * 41* y2 + 47*x2 + 59 *z2 + 67 )
+-- grad z
+q8 = z - z2 - l2*(2 * 43* z2 + 53*x2 + 59 *z2 + 71 )
+-- distance
+q9 = (x-x2)^2 + (y-y2)^2 + (z-z2)^2 - v^2
+-- Quadic
+q10 = 37 * x2^2 + 41*y2^2 + 43*z2^2 + 47*x2*y2 + 53*x2*z2 + 59 *y2 *z2 + 61*x2 + 67*y2 + 71 *z2 + 73
+---------------------------------------------------
+-- Third Quadric
+---------------------------------------------------
+-- grad x
+q11 = x - x3 - l3*(2 * 79* x3 + 97*y3 + 101 *z3 + 107 )
+-- grad y
+q12 = y - y3 - l3*(2 * 83* y3 + 97*x3 + 103 *z3 + 109 )
+-- grad z
+q13 = z - z3 - l3*(2 * 89* z3 + 101*x3 + 103 *z3 + 113 )
+-- distance
+q14 = (x-x3)^2 + (y-y3)^2 + (z-z3)^2 - v^2
+-- Quadic
+q15 =  79 * x3^2 + 83*y3^2 + 89*z3^2 + 97*x3*y3 + 101*x3*z3 + 103 *y3 *z3 + 107*x3 + 109*y3 + 113 *z3 + 127
+---------------------------------------------------
+-- Fourth Quadric
+---------------------------------------------------
+-- grad x
+q16 = x - x4 - l4*(2 * 131* x4 + 149*y4 + 151 *z4 + 163 )
+-- grad y
+q17 = y - y4 - l4*(2 * 137* y4 + 149*x4 + 157 *z4 + 167 )
+-- grad z
+q18 = z - z4 - l4*(2 * 139* z4 + 151*x4 + 157 *z4 + 173 )
+-- distance
+q19 = (x-x4)^2 + (y-y4)^2 + (z-z4)^2 - v^2
+-- Quadic
+q20 = 131* x4^2 + 137*y4^2 + 139*z4^2 + 149*x4*y4 + 151*x4*z4 + 157 *y4 *z4 + 163*x4 + 167*y4 + 173 *z4 + 179
+---------------------------------------------------
 
-
-[x,y] = vars
-
-p1 :: Polynomial' 2
-p1 = y^2 - x^2 - x^3
-
-
-p2 :: Polynomial' 2
-p2 = y^2 + x^2 - 1
-
-
-
-
----- SIMBOLICO----
-
---n, m :: Polynomial' 2
---[n,m] = vars
-
---[n, m] = map (injectVar . flip Variable Nothing) "nm"
-
-
-
-
-
-
--- p12 :: (LabPolynomial (Polynomial' 2) '["m", "n"])
--- p12 = #n^2 - #m^2 - #m^3
-
--- p13 :: (LabPolynomial (Polynomial' 2) '["m", "n"])
--- p13 = #m^2 + #n^2 -1
-
--- p14 :: Polynomial' 2
--- p14 = n^2 - m^2 - m^3
-
--- p15 :: Polynomial' 2
--- p15 = m^2 + n^2 -1
-
-
-
-----------
-
---Se debe comparar "fu a" con "faster_f a" funciona para numeros grandes 
-
-
+charSet = ascendentChain [q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12,q13,q14,q15,q16,q17,q18,q19,q20] [] [] sTwenty 0
 
 main :: IO()
 main = do
---     putStrLn "\n Chain 2D"
---     print problem_chain
---     putStrLn "\n Chain Cuadrics"
---     print chainq
-        print p2
-
-
+      putStrLn "\n Characteristic SET"
+      print charSet
