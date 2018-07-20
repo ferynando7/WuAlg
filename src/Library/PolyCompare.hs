@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude #-}
 
-module Library.PolyCompare 
+module Library.PolyCompare
 (
     (<<=),
     (<<),
@@ -21,10 +21,13 @@ pol1 <<= pol2 = foldl1 (\acc bol -> acc && bol) bools
 
 compareLists :: (IsOrder n ord, Ord k)
               =>[(OrderedMonomial ord n, k)] -> [(OrderedMonomial ord n, k)] -> Bool
+compareLists [] (y:ys) = True
+compareLists (x:xs) [] = False
 compareLists [] [] = False
 compareLists (x:xs) (y:ys)
             |  x /= y = x < y
-            | otherwise = compareLists xs ys
+            |  x == y = compareLists xs ys
+            | otherwise = False
 
 
 
