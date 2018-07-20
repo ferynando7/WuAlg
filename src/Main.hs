@@ -35,7 +35,7 @@ sEight = sing
 sNine :: SNat 9
 sNine = sing
 
-<<<<<<< HEAD
+
 sTwelve :: SNat 12
 sTwelve = sing
 
@@ -125,4 +125,3 @@ main :: IO()
 main = do
       putStrLn "\n Characteristic SET"
       print charSet
-=======
