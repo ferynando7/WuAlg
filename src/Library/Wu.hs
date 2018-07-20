@@ -3,7 +3,8 @@
 module Library.Wu
 (
     Polynomial',
-    ascendentChain
+    ascendentChain,
+    ascendentChainWithConstants
 ) where
 
 import Algebra.Prelude
