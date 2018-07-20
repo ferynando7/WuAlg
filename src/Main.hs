@@ -1,5 +1,12 @@
 {-# LANGUAGE ConstraintKinds, DataKinds, GADTs, KindSignatures     #-}
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude              #-}
+{-# LANGUAGE NoMonomorphismRestriction, QuasiQuotes, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-#LANGUAGE TypeSynonymInstances #-}
+{-#LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedLabels, TypeOperators #-}
 
 
 module Main where
@@ -28,6 +35,7 @@ sEight = sing
 sNine :: SNat 9
 sNine = sing
 
+<<<<<<< HEAD
 sTwelve :: SNat 12
 sTwelve = sing
 
@@ -117,3 +125,4 @@ main :: IO()
 main = do
       putStrLn "\n Characteristic SET"
       print charSet
+=======
