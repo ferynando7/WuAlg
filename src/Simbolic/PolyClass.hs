@@ -24,9 +24,10 @@ import Numeric.Algebra.Class
 type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 
 
+
 instance (IsMonomialOrder n order, KnownNat n) => LeftModule (Expr Integer) (OrderedPolynomial (Expr Integer) order n) where
         expr .* Polynomial dic = polynomial $ fmap (expr *) dic
-      
+
 instance (IsMonomialOrder n order, KnownNat n) => RightModule (Expr Integer) (OrderedPolynomial (Expr Integer) order n) where
         (*.) = flip (.*)
 
@@ -50,7 +51,7 @@ sortPolys (x:xs) =
 classVarDeg :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n  -> SNat n -> Int -> Int
 classVarDeg pol nat var =  leadingMonomialDegs !! var
-        where 
+        where
                 leadingMonomialDegs = V.toList $ getMonomial $ leadingMonomial' pol nat var
         ---------------------------------------------------------------
 
@@ -60,16 +61,16 @@ classVarDeg pol nat var =  leadingMonomialDegs !! var
 
 minimalPolyWithVar ::(IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
          => [OrderedPolynomial k order n] -> SNat n -> Int -> OrderedPolynomial k order n
-minimalPolyWithVar pols nat var 
+minimalPolyWithVar pols nat var
         | listOfPossiblePolys == [] = minimalPoly pols
         | otherwise = minimalPoly listOfPossiblePolys
         where listOfPossiblePolys = filter (varInPoly nat var) pols
 
 varInPoly :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => SNat n -> Int -> OrderedPolynomial k order n -> Bool
-varInPoly nat var pol 
+varInPoly nat var pol
         | classVarDeg pol nat var == 0 = False
-        | otherwise = True 
+        | otherwise = True
 
 varInPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => SNat n -> Int -> [OrderedPolynomial k order n] -> Int
@@ -79,7 +80,7 @@ varInPolys nat var pols = foldl foo 0 pols
 minimalPoly :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n
 minimalPoly pols = foldl1 (\acc pol -> if acc << pol then acc else pol) pols
-                
+
 
 
 --Funcion que obtiene los polinomios que seran los divisores
@@ -158,7 +159,7 @@ simplifyTerm pol  = pol // (commonCoeff pol, commonMonomial pol)
 (//) :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
             => OrderedPolynomial k order n  -> (k, OrderedMonomial order n) -> OrderedPolynomial k order n
 pol // (coeff, mon) = sum $ map toPolynomial $ map (`tryDiv'` (coeff, mon)) (map (snd &&& fst) terms)
-            where  
+            where
                     terms = M.toList $ _terms pol
 
 -- Funcion que obtiene el gcd de un polinomio, en este caso se refiere al termino en comun de todos los monomios que conforman el polinomio
@@ -167,15 +168,15 @@ commonMonomial :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, E
 commonMonomial pol  = foldl1 foo monomials
                         where
                                 foo = \acc monomial -> gcdMonomial acc monomial
-                                monomials = M.keys $ _terms pol 
+                                monomials = M.keys $ _terms pol
 
 commonCoeff :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Integral k)
         => OrderedPolynomial k order n -> k
 commonCoeff pol  = foldl1 foo coeffs
                 where
                         foo = \acc coeff -> gcdCoeff acc coeff
-                        coeffs = M.elems $ _terms pol 
-                        
+                        coeffs = M.elems $ _terms pol
+
 gcdCoeff :: (Integral a) => a -> a -> a
 gcdCoeff a b
         | abs a > abs b = if b == 0 then abs a else abs $ gcdCoeff b $ a `mod` b
