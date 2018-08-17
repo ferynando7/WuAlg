@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude #-}
 
-module Simbolic.PolyCompare
+module Symbolic.PolyCompare
 (
     (<<=),
     (<<),

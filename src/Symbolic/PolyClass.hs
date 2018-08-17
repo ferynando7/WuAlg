@@ -1,22 +1,45 @@
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleInstances, TypeFamilies #-}
 
-module Simbolic.PolyClass
+module Symbolic.PolyClass
 (
     PolynomialSym,
     sPolynomial',
     minimalPolyWithVar,
     dividendPolys,
-    classVarDeg
-) where
+    classVarDeg,
+
+
+    sortPolys,
+    varInPoly,
+    varInPolys,
+    minimalPoly,
+    leadingTerm',
+    leadingMonomial',
+    leadingCoeff',
+    leadingAlgCoeff',
+    sPolynomial',
+    chooseTermsWithVar,
+    chooseTermsWithList,
+    simplifyMonomial,
+    simplifyTerm,
+    (//),
+    commonMonomial,
+    commonCoeff,
+    gcdCoeff
+
+
+
+) 
+where
 
 import Algebra.Prelude                  hiding ((>>),(>>=))
 import qualified Data.Map.Strict        as M
 import qualified Data.Sized.Builtin     as V
 import Data.Maybe                       (fromJust)
-import Simbolic.PolyCompare
-import Simbolic.Mon
-import Simbolic.Expr
+import Symbolic.PolyCompare
+import Symbolic.Mon
+import Symbolic.Expr
 import Numeric.Algebra.Class
 
 
@@ -24,12 +47,14 @@ import Numeric.Algebra.Class
 type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 
 
-instance (IsMonomialOrder n order, KnownNat n) => LeftModule (Expr Integer) (OrderedPolynomial (Expr Integer) order n) where
+instance (KnownNat n) => LeftModule (Expr Integer) (OrderedPolynomial (Expr Integer) Lex n) where
         expr .* Polynomial dic = polynomial $ fmap (expr *) dic
       
-instance (IsMonomialOrder n order, KnownNat n) => RightModule (Expr Integer) (OrderedPolynomial (Expr Integer) order n) where
+instance (KnownNat n) => RightModule (Expr Integer) (OrderedPolynomial (Expr Integer) Lex n) where
         (*.) = flip (.*)
 
+-- instance LeftModule Expr (Coefficient poly, OrderedMonomial (MOrder poly) (Arity poly)) where
+--         expr .* (coef, mon) = (expr * coef , mon )
 
 
 
@@ -113,13 +138,33 @@ leadingAlgCoeff' pol nat var = (leadingTerm' pol nat var) `tryDiv'` (1, mon nat 
 -- Funcion que calcula el spolynomial factorizando y simplificando el resultado
 sPolynomial' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
             => OrderedPolynomial k order n  -> OrderedPolynomial k order n  -> SNat n -> Int -> OrderedPolynomial k order n
-sPolynomial' f g n i = simplifyTerm (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
+sPolynomial' f g n i = (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
                         where
                         h = (one, lcmMonomial (leadingMonomial' f n i) (leadingMonomial' g n i) )
                         factorsg = chooseTermsWithVar g n i
                         factorsf = chooseTermsWithVar f n i
                         commonLeadf = commonMonomial factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
                         commonLeadg = commonMonomial factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
+
+------
+sPolynomialSym' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+            => OrderedPolynomial k order n  -> OrderedPolynomial k order n  -> SNat n -> Int -> OrderedPolynomial k order n
+sPolynomialSym' f g n i = (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
+                        where
+                        h = (one, lcmMonomial (leadingMonomial' f n i) (leadingMonomial' g n i) )
+                        factorsg = chooseTermsWithVar g n i
+                        factorsf = chooseTermsWithVar f n i
+                        commonLeadf = commonMonomial factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
+                        commonLeadg = commonMonomial factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
+                        --reduce = \pol -> sum $ map (\(x,y) ->  Polynomial $ M.singleton x (simplify $ y) ) $ M.toList $ _terms pol
+
+-- symbolicReduce :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+--         => OrderedPolynomial k order n  -> OrderedPolynomial k order n
+-- symbolicReduce pol =  sum $ map (\(x,y) ->  Polynomial $ M.singleton x (simplify $ y) ) $ M.toList $ _terms pol
+
+
+------
+
 
 
 

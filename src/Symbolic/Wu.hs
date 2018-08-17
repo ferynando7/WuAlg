@@ -1,14 +1,15 @@
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude              #-}
 
-module Simbolic.Wu
+module Symbolic.Wu
 (
     ascendentChain,
-    ascendentChainWithConstants
+    ascendentChainWithConstants,
+    pseudoRemainder
 ) where
 
 import Algebra.Prelude
-import Simbolic.Mon
-import Simbolic.PolyClass
+import Symbolic.Mon
+import Symbolic.PolyClass
 
 
 

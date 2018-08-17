@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, NoImplicitPrelude #-}
 
-module Simbolic.Mon
+module Symbolic.Mon
 (
     toMonomial,
     mon,
