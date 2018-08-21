@@ -192,7 +192,7 @@ chooseTermsWithList pol idxs var = foldl foo 0 idxs
                         -- Funcion que permite simplificar un polinomio en caso de que este tenga una expresion en commun en todos los monomios.
 simplifyMonomial :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
-simplifyMonomial pol = pol // (1, commonMonomial pol)
+simplifyMonomial pol = pol // (one, commonMonomial pol)
 
 simplifyTerm :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
