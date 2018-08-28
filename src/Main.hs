@@ -149,7 +149,8 @@ q3 = y - y1 - l1 * ( (2 * b) !* y1 + d !* x1 + f !* z1 + h !* 1 )
 q4 = z - z1 - l1 * ( (2 * c) !* z1 + e !* x1 + f !* y1 + i !* 1 )
 q5 = (x - x1)^2 + (y - y1)^2 + (z - z1)^2 - v^2
 
-asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEight 0
+asc = S.characteristicWuSet [q1, q2, q3, q4, q5] [] sEight 0
+--asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEight 0
 
 
 main :: IO()
