@@ -10,171 +10,150 @@
 
 
 module Main where
-import Algebra.Prelude                   hiding ((>>),(>>=))
-import Library.Wu
+import Algebra.Prelude                   hiding ((>>),(>>=), fromList)
+import qualified Symbolic.Wu as S
+import Symbolic.PolyClass
+import Symbolic.PolyCompare
+import Symbolic.Expr
+import Symbolic.Mon
+import Data.Map.Strict   
+import Library.Wu as L
 
---ZONA DE SNATS
-sTwo :: SNat 2
-sTwo = sing
+-- sTwo :: SNat 2
+-- sTwo = sing
 
-sThree :: SNat 3
-sThree = sing
+-- sTwelve :: SNat 12
+-- sTwelve = sing
 
-sFour :: SNat 4
-sFour = sing
 
-sFive :: SNat 5
-sFive = sing
+-- x = var 0
+-- y = var 1
+-- x1 = var 2
+-- y1 = var 3
+-- l1 = var 4
+-- x2 = var 5
+-- y2 = var 6
+-- l2 = var 7
+-- x3 = var 8
+-- y3 = var 9
+-- l3 = var 10
+-- v = var 11
 
-sSix :: SNat 6
-sSix = sing
+
+-- a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r :: Expr Integer
+-- a = Expr $ fromList [(["a"],1)]
+-- b = Expr $ fromList [(["b"],1)]
+-- c = Expr $ fromList [(["c"],1)]
+-- d = Expr $ fromList [(["d"],1)]
+-- e = Expr $ fromList [(["e"],1)]
+-- f = Expr $ fromList [(["f"],1)]
+-- g = Expr $ fromList [(["g"],1)]
+-- h = Expr $ fromList [(["h"],1)]
+-- i = Expr $ fromList [(["i"],1)]
+-- j = Expr $ fromList [(["j"],1)]
+-- k = Expr $ fromList [(["k"],1)]
+-- l = Expr $ fromList [(["l"],1)]
+-- m = Expr $ fromList [(["m"],1)]
+-- n = Expr $ fromList [(["n"],1)]
+-- o = Expr $ fromList [(["o"],1)]
+-- p = Expr $ fromList [(["p"],1)]
+-- q = Expr $ fromList [(["q"],1)]
+-- r = Expr $ fromList [(["r"],1)]
+
+-- q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12:: PolynomialSym 12
+-- q1 = a !* x1^2 + b !* x1*y1 + c !* y1^2 + d !* x1 + e !* y1 + f!*1
+-- q2 = x - x1 - l1 * ( (2 * a) !* x1 + b !* y1 + d!*1 )
+-- q3 = y - y1 - l1 * ( (2 * c) !* y1 + b !* x1 + e!*1)
+-- q4 = (x - x1)^2 + (y - y1)^2 - v^2
+
+-- q5 = g !* x2^2 + h !* x2*y2 + i !* y2^2 + j !* x2 + k !* y2 + l!*1
+-- q6 = x - x2 - l2 * ( (2 * g) !* x2 + h !* y2 + j!*1 )
+-- q7 = y - y2 - l2 * ( (2 * i) !* y2 + h !* x2 + k!*1 )
+-- q8 = (x - x2)^2 + (y - y2)^2 - v^2
+
+-- q9 = m !* x3^2 + n !* x3*y3 + o !* y3^2 + p !* x3 + q !* y3 + r!*1
+-- q10 = x - x3 - l3 * ( (2 * m) !* x3 + n !* y3 + p!*1 )
+-- q11 = y - y3 - l3 * ( (2 * o) !* y3 + n !* x3 + q !*1)
+-- q12 = (x - x3)^2 + (y - y3)^2 - v^2
+
+-- asc  = S.ascendentChain [q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12] [] [] sTwelve 0
+
+-- sTwo :: SNat 2
+-- sTwo = sing
+
+-- x = var 0
+-- y = var 1
+
+-- a,b,c,d,e,f :: Expr Integer
+-- a = Expr $ fromList [(["a"],1)]
+-- b = Expr $ fromList [(["b"],1)]
+-- c = Expr $ fromList [(["c"],1)]
+-- d = Expr $ fromList [(["d"],1)]
+-- e = Expr $ fromList [(["e"],1)]
+-- f = Expr $ fromList [(["f"],1)]
+
+-- aa = 2
+-- bb = 1
+-- cc = 3
+-- dd = 1
+-- ee = 4
+-- ff = -2
+
+
+
+-- q1,q2:: PolynomialSym 2
+-- q1 = a !* y^2 +  b !* x^2 + c !* x^3
+-- q2 = d !* y^2 + e !* x^2 + f !* 1
+
+-- qq1, qq2 :: Polynomial' 2
+-- qq1 = aa*y^2 +  bb*x^2 + cc* x^3
+-- qq2 = dd* y^2 + ee* x^2 + ff* 1
+
 
 sEight :: SNat 8
 sEight = sing
 
-sNine :: SNat 9
-sNine = sing
+x1 = var 0
+y1 = var 1
+z1 = var 2
+l1 = var 3
+x = var 4
+y = var 5
+z = var 6
+v = var 7
+
+a,b,c,d,e,f,g,h,i,j :: Expr Integer
+a = Expr $ fromList [(["a"],1)]
+b = Expr $ fromList [(["b"],1)]
+c = Expr $ fromList [(["c"],1)]
+d = Expr $ fromList [(["d"],1)]
+e = Expr $ fromList [(["e"],1)]
+f = Expr $ fromList [(["f"],1)]
+g = Expr $ fromList [(["g"],1)]
+h = Expr $ fromList [(["h"],1)]
+i = Expr $ fromList [(["i"],1)]
+j = Expr $ fromList [(["j"],1)]
+
+aa = 2
+bb = 1
+cc = 3
+dd = 1
+ee = 4
+ff = -2
 
 
-sTwelve :: SNat 12
-sTwelve = sing
+q1,q2,q3,q4,q5:: PolynomialSym 8
+q1 = a !* x1^2 + b !* y1^2 + c !* z1^2 + d!* (x1 * y1) + e !* (x1 * z1)  + f!* (y1 * z1) +  g !* x1 +  h !* y1 + i !* z1 + j !* 1
+q2 = x - x1 - l1 * ( (2 * a) !* x1 + d !* y1 + e !* z1 + g !* 1 )
+q3 = y - y1 - l1 * ( (2 * b) !* y1 + d !* x1 + f !* z1 + h !* 1 )
+q4 = z - z1 - l1 * ( (2 * c) !* z1 + e !* x1 + f !* y1 + i !* 1 )
+q5 = (x - x1)^2 + (y - y1)^2 + (z - z1)^2 - v^2
 
-sTwenty :: SNat 20
-sTwenty = sing
+asc = S.characteristicWuSet [q1, q2, q3, q4, q5] [] sEight 0
+--asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEight 0
 
-sSixty :: SNat 60
-sSixty = sing
-
-
-x = var 0
-y= var 1
-z= var 2
-v= var 3
-l1= var 4
-l2= var 5
-l3= var 6
-l4= var 7
-x1= var 8
-y1= var 9
-z1= var 10
-x2= var 11
-y2= var 12
-z2= var 13
-x3= var 14
-y3= var 15
-z3= var 16
-x4= var 17
-y4= var 18
-z4= var 19
-a = var 20
-b = var 21
-c = var  22
-d = var  23
-e = var 24
-f = var  25
-g = var  26
-h = var  27
-i = var  28
-j = var  29
-a2 = var 30
-b2 = var 31
-c2 = var 32
-d2 = var 33
-e2 = var 34
-f2 = var 35
-g2 = var 36
-h2 = var 37
-i2 = var 38
-j2 = var 39
-a3 = var 40
-b3 = var 41
-c3 = var 42
-d3 = var 43
-e3 = var 44
-f3 = var 45
-g3 = var 46
-h3 = var 47
-i3 = var 48
-j3 = var 49
-a4 = var 50
-b4 = var 51
-c4 = var 52
-d4 = var 53
-e4 = var 54
-f4 = var 55
-g4 = var 56
-h4 = var 57
-i4 = var 58
-j4 = var 59
-
-
-
-
-
-
-
-
-
-
-
-q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12,q13,q14,q15,q16,q17,q18,q19,q20 :: Polynomial' 60
--- First Cuadric
----------------------------------------------------
--- grad x
-q1 = x - x1 - l1*(2 * a* x1 + d*
-y1 + e*z1 + g )
--- grad y
-q2 = y - y1 - l1*(2 * b* y1 + d*x1 + f *z1 + h )
--- grad z
-q3 = z - z1 - l1*(2 * c* z1 + e*x1 + f *z1 + i )
--- distance
-q4 = (x-x1)^2 + (y-y1)^2 + (z-z1)^2 - v^2
--- Quadic
-q5 = a * x1^2 + b*y1^2 + c*z1^2 + d*x1*y1 + e*x1*z1 + f*y1 *z1 + g*x1 + h*y1 + i *z1 + j
----------------------------------------------------
--- Second Quadric
----------------------------------------------------
--- grad x
-q6= x - x2 - l2*(2 * a2* x2 + d2*y2 + e2 *z2 + g2 )
--- grad y
-q7 = y - y2 - l2*(2 * b2* y2 + d2*x2 + f2 *z2 + h2 )
--- grad z
-q8 = z - z2 - l2*(2 * c2* z2 + e3*x2 + f2 *z2 + i2 )
--- distance
-q9 = (x-x2)^2 + (y-y2)^2 + (z-z2)^2 - v^2
--- Quadic
-q10 =  a2 * x2^2 +  b2 *y2^2 + c2 *z2^2 + d2*x2*y2 + e2*x2*z2 + f2 *y2 *z2 + g2*x2 + h2*y2 + i *z2 + j2
----------------------------------------------------
--- Third Quadric
----------------------------------------------------
--- grad x
-q11 = x - x3 - l3*(2 *a3* x3 + d3*y3 + e3 *z3 + g3 )
--- grad y
-q12 = y - y3 - l3*(2 *b3* y3 + d3*x3 + f3 *z3 + h3 )
--- grad z
-q13 = z - z3 - l3*(2 *c3* z3 + e3*x3 + f3 *z3 + i3 )
--- distance
-q14 = (x-x3)^2 + (y-y3)^2 + (z-z3)^2 - v^2
--- Quadic
-q15 =  a3 * x3^2 + b3*y3^2 + c3*z3^2 + d3*x3*y3 + e3*x3*z3 + f3*y3 *z3 + g3*x3 + h3*y3 + i3 *z3 + j3
----------------------------------------------------
----------------------------------------------------
--- Fourth Quadric
--- grad x
-q16 = x - x4 - l4*(2 * a4* x4 + d4*y4 + e4 *z4 + g4 )
--- grad y
-q17 = y - y4 - l4*(2 * b4* y4 + d4*x4 + f4 *z4 + h4 )
--- grad z
-q18 = z - z4 - l4*(2 * c4* z4 + e4*x4 + f4 *z4 + i4 )
--- distance
-q19 = (x-x4)^2 + (y-y4)^2 + (z-z4)^2 - v^2
--- Quadic
-q20 = a4* x4^2 + b4*y4^2 + c4*z4^2 + d4*x4*y4 + e4*x4*z4 + f4*y4 *z4 + g4*x4 + h4*y4 + i4 *z4 + f4
----------------------------------------------------
-
-charSet = ascendentChainWithConstants [q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12,q13,q14,q15,q16,q17,q18,q19,q20] [] [] sSixty 0 20
 
 main :: IO()
 main = do
       putStrLn "\n Characteristic SET"
-      print charSet
+      print asc
