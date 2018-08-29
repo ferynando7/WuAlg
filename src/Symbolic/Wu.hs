@@ -3,7 +3,10 @@
 module Symbolic.Wu
 (
     pseudoRemainder,
-    characteristicWuSet
+    getPseudoRemainders,
+    characteristicWuSet,
+    characteristicWuSingleton
+
 ) where
 
 import Algebra.Prelude
@@ -54,6 +57,29 @@ characteristicWuSet polys oldChain sN var =  (basisPoly : characteristicWuSet ps
         basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly sN) sN var
         -- We compute the pseudo remainders for the next iteration
         pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
+
+
+characteristicWuSingleton ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> SNat n -> Int -> ([OrderedPolynomial k order n],[OrderedPolynomial k order n])
+characteristicWuSingleton [a] _ sN var = ([a],[])
+characteristicWuSingleton polys [] sN var = ([basisPoly], pseudos)
+        where
+        -- We compute the minimal polynomial of the set
+        minimalPoly = minimalPolyWithVar polys sN var
+        -- We obtain the basis polynomial of the set
+        basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys sN var) ) sN var
+        -- We compute the pseudo remainders for the next iteration
+        pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
+characteristicWuSingleton polys oldChain sN var =  ((basisPoly:oldChain),  pseudos  )
+        where
+        -- We compute the minimal Polynomial of the set
+        minimalPoly = minimalPolyWithVar polys sN var
+        -- We compute the basis polynomial of the set
+        basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly sN) sN var
+        -- We compute the pseudo remainders for the next iteration
+        pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
+
+
 
 
 characteristicWuSetWithStop ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
