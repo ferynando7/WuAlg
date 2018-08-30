@@ -16,7 +16,7 @@ import Symbolic.PolyClass
 import Symbolic.PolyCompare
 import Symbolic.Expr
 import Symbolic.Mon
-import Data.Map.Strict   
+import Data.Map.Strict
 import Library.Wu as L
 
 -- sTwo :: SNat 2
@@ -110,8 +110,8 @@ import Library.Wu as L
 -- qq2 = dd* y^2 + ee* x^2 + ff* 1
 
 
-sEight :: SNat 8
-sEight = sing
+snat :: SNat 7
+snat = sing
 
 x1 = var 0
 y1 = var 1
@@ -120,7 +120,7 @@ l1 = var 3
 x = var 4
 y = var 5
 z = var 6
-v = var 7
+
 
 a,b,c,d,e,f,g,h,i,j :: Expr Integer
 a = Expr $ fromList [(["a"],1)]
@@ -133,6 +133,7 @@ g = Expr $ fromList [(["g"],1)]
 h = Expr $ fromList [(["h"],1)]
 i = Expr $ fromList [(["i"],1)]
 j = Expr $ fromList [(["j"],1)]
+v = Expr $ fromList [(["v"],1)]
 
 aa = 2
 bb = 1
@@ -142,15 +143,15 @@ ee = 4
 ff = -2
 
 
-q1,q2,q3,q4,q5:: PolynomialSym 8
+q1,q2,q3,q4,q5:: PolynomialSym 7
 q1 = a !* x1^2 + b !* y1^2 + c !* z1^2 + d!* (x1 * y1) + e !* (x1 * z1)  + f!* (y1 * z1) +  g !* x1 +  h !* y1 + i !* z1 + j !* 1
 q2 = x - x1 - l1 * ( (2 * a) !* x1 + d !* y1 + e !* z1 + g !* 1 )
 q3 = y - y1 - l1 * ( (2 * b) !* y1 + d !* x1 + f !* z1 + h !* 1 )
 q4 = z - z1 - l1 * ( (2 * c) !* z1 + e !* x1 + f !* y1 + i !* 1 )
-q5 = (x - x1)^2 + (y - y1)^2 + (z - z1)^2 - v^2
+q5 = (x - x1)^2 + (y - y1)^2 + (z - z1)^2 - v * v !* 1
 
-asc = S.characteristicWuSet [q1, q2, q3, q4, q5] [] sEight 0
---asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEight 0
+asc = S.characteristicWuSet [q1, q2, q3, q4] [] snat 0
+--asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEigmainht 0
 
 
 main :: IO()
