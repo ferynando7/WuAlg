@@ -35,7 +35,7 @@ data Expr a =   Expr (AP.Map [String] a)
                 deriving (Eq)
 
 instance Show (Expr Integer) where
-    show (Expr a) = showSym (toList a)
+    show (Expr a) = "("++ showSym (toList a)++")"
     show (Expr a :/: Expr b) = showSym (toList a) ++ "/" ++ showSym (toList b)
 
 
