@@ -2,105 +2,65 @@
 
 module Symbolic.Wu
 (
-    pseudoRemainder,
-    getPseudoRemainders,
+    PolynomialSym,
+    pseudoRemainderSym,
+    getPseudoRemaindersSym,
     characteristicWuSet,
     characteristicWuSingleton
 
 ) where
 
 import Algebra.Prelude
-import Symbolic.Mon
-import Symbolic.PolyClass
+import Library.Mon
+import Library.PolyClass
+import Library.Wu
+import Symbolic.Expr
+
+type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 
 
+sPolynomialSym' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+            => OrderedPolynomial k order n  -> OrderedPolynomial k order n  -> SNat n -> Int -> OrderedPolynomial k order n
+sPolynomialSym' f g n i = (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
+                        where
+                        h = (one, lcmMonomial (leadingMonomial' f n i) (leadingMonomial' g n i) )
+                        factorsg = chooseTermsWithVar g n i
+                        factorsf = chooseTermsWithVar f n i
+                        commonLeadf = commonMonomial factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
+                        commonLeadg = commonMonomial factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
 
-pseudoRemainder :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+
+pseudoRemainderSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
                     => SNat n -> Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
-pseudoRemainder sN var g f
+pseudoRemainderSym sN var g f
                 | classVarDeg f sN var < classVarDeg g sN var || classVarDeg g sN var == 0 = f
-                | otherwise = pseudoRemainder  sN var g (sPolynomial' f g sN var)
+                | otherwise = pseudoRemainderSym  sN var g (sPolynomialSym' f g sN var)
 
 ------------------FUNCION QUE OBTIENE LOS PSEUDOREMAINDERS DE UN CONJUNTO DE POLINOMIOS
-getPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+getPseudoRemaindersSym :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
-getPseudoRemainders pols nat var = map (pseudoRemainder nat var divisor) dividens
-        where 
+getPseudoRemaindersSym pols nat var = map (pseudoRemainderSym nat var divisor) dividends
+        where
                 divisor = minimalPolyWithVar pols nat var
-                dividens = dividendPolys pols nat var
+                dividends = dividendPolys pols nat var
 
 -- En el nuevo inverted psuedoremainders se tiene encuenta la posicion de los elementos para los cuales se esta dividiendo el polinomio
-invPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+invPseudoRemaindersSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> SNat n -> [OrderedPolynomial k order n]
-invPseudoRemainders pols pol nat = map (foo nat pol) polinomials
+invPseudoRemaindersSym pols pol nat = map (foo nat pol) polinomials
         where
-                foo = \sN g f -> pseudoRemainder sN (snd $ f) (fst $ f) g
+                foo = \sN g f -> pseudoRemainderSym sN (snd $ f) (fst $ f) g
                 polinomials = zip pols [0..]
 
 
-characteristicWuSet ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+characteristicWuSetSym ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
-characteristicWuSet [a] _ sN var = [a]
-characteristicWuSet polys [] sN var = (basisPoly: characteristicWuSet pseudos [basisPoly] sN (var+1))
-        where
-        -- We compute the minimal polynomial of the set
-        minimalPoly = minimalPolyWithVar polys sN var
-        -- We obtain the basis polynomial of the set
-        basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys sN var) ) sN var
-        -- We compute the pseudo remainders for the next iteration
-        pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
-characteristicWuSet polys oldChain sN var =  (basisPoly : characteristicWuSet pseudos (oldChain ++ [basisPoly]) sN (var+1) )
-        where
-        -- We compute the minimal Polynomial of the set
-        minimalPoly = minimalPolyWithVar polys sN var
-        -- We compute the basis polynomial of the set
-        basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly sN) sN var
-        -- We compute the pseudo remainders for the next iteration
-        pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
+characteristicWuSetSym = characteristicWuSet
 
-
-characteristicWuSingleton ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+characteristicWuSingletonSym ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> SNat n -> Int -> ([OrderedPolynomial k order n],[OrderedPolynomial k order n])
-characteristicWuSingleton [a] _ sN var = ([a],[])
-characteristicWuSingleton polys [] sN var = ([basisPoly], pseudos)
-        where
-        -- We compute the minimal polynomial of the set
-        minimalPoly = minimalPolyWithVar polys sN var
-        -- We obtain the basis polynomial of the set
-        basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys sN var) ) sN var
-        -- We compute the pseudo remainders for the next iteration
-        pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
-characteristicWuSingleton polys oldChain sN var =  ((basisPoly:oldChain),  pseudos  )
-        where
-        -- We compute the minimal Polynomial of the set
-        minimalPoly = minimalPolyWithVar polys sN var
-        -- We compute the basis polynomial of the set
-        basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly sN) sN var
-        -- We compute the pseudo remainders for the next iteration
-        pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
+characteristicWuSingletonSym = characteristicWuSingleton
 
-
-
-
-characteristicWuSetWithStop ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+characteristicWuSetWithStopSym ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
-characteristicWuSetWithStop _ _ _ _ 0 = []
-characteristicWuSetWithStop [a] _ sN var stop = [a]
-characteristicWuSetWithStop polys [] sN var stop = (basisPoly: characteristicWuSetWithStop pseudos [basisPoly] sN (var+1) (stop -1 ))
-                                where
-                                -- We compute the minimal polinomial of the set
-                                minimalPoly = minimalPolyWithVar polys sN var
-                                -- We obtain the basis polynomia of the set
-                                basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys sN var) ) sN var
-                                -- We compute the pseudo remainders for the next iteration
-                                pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
-characteristicWuSetWithStop polys oldChain sN var stop =  (basisPoly : characteristicWuSetWithStop pseudos (oldChain ++ [basisPoly]) sN (var+1) (stop -1) )
-                                where
-                                -- We compute the minimal Polynomial of the set
-                                minimalPoly = minimalPolyWithVar polys sN var
-                                -- We compute the basis polynomial of the set
-                                basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly sN) sN var
-                                -- We compute the pseudo remainders for the next iteration
-                                pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder sN var basisPoly minimalPoly else pseudoRemainder sN var basisPoly p) (getPseudoRemainders polys sN var)
-
-
+characteristicWuSetWithStopSym = characteristicWuSetWithStop

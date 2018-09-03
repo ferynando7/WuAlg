@@ -12,12 +12,9 @@
 module Main where
 import Algebra.Prelude                   hiding ((>>),(>>=), fromList)
 import qualified Symbolic.Wu as S
-import Symbolic.PolyClass
-import Symbolic.PolyCompare
 import Symbolic.Expr
-import Symbolic.Mon
 import Data.Map.Strict
-import Library.Wu as L
+import qualified Library.Wu as L
 
 -- sTwo :: SNat 2
 -- sTwo = sing
@@ -143,12 +140,13 @@ ee = 4
 ff = -2
 
 
-q1,q2,q3,q4,q5:: PolynomialSym 7
+q1,q2,q3,q4,q5:: S.PolynomialSym 7
 q1 = a !* x1^2 + b !* y1^2 + c !* z1^2 + d!* (x1 * y1) + e !* (x1 * z1)  + f!* (y1 * z1) +  g !* x1 +  h !* y1 + i !* z1 + j !* 1
 q2 = x - x1 - l1 * ( (2 * a) !* x1 + d !* y1 + e !* z1 + g !* 1 )
 q3 = y - y1 - l1 * ( (2 * b) !* y1 + d !* x1 + f !* z1 + h !* 1 )
 q4 = z - z1 - l1 * ( (2 * c) !* z1 + e !* x1 + f !* y1 + i !* 1 )
 q5 = (x - x1)^2 + (y - y1)^2 + (z - z1)^2 - v * v !* 1
+
 
 asc = S.characteristicWuSet [q1, q2, q3, q4] [] snat 0
 --asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEigmainht 0
