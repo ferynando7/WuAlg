@@ -3,8 +3,9 @@
 module Library.Wu
 (
     Polynomial',
-    ascendentChain,
-    ascendentChainWithConstants
+    characteristicWuSet,
+    characteristicWuSingleton,
+    characteristicWuSetWithStop
 ) where
 
 import Algebra.Prelude
@@ -14,108 +15,102 @@ import Library.PolyClass
 type Polynomial' n = OrderedPolynomial Integer Lex n
 
 ------
+-- Funcion que calcula el spolynomial factorizando y simplificando el resultado
+sPolynomial' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+            => OrderedPolynomial k order n  -> OrderedPolynomial k order n -> Int -> OrderedPolynomial k order n
+sPolynomial' f g i = simplifyTerm (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
+                        where
+                        h = (one, lcmMonomial (leadingMonomial' f i) (leadingMonomial' g i))
+                        factorsg = chooseTermsWithVar g i
+                        factorsf = chooseTermsWithVar f i
+                        commonLeadf = commonMonomial factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
+                        commonLeadg = commonMonomial factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
+
 
 pseudoRemainder :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
-                    => SNat n -> Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
-pseudoRemainder sN var g f
-                | classVarDeg f sN var < classVarDeg g sN var || classVarDeg g sN var == 0 = f
-                | otherwise = pseudoRemainder  sN var g (sPolynomial' f g sN var)
+                    => Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
+pseudoRemainder var g f
+                | classVarDeg f var < classVarDeg g var || classVarDeg g var == 0 = f
+                | otherwise = pseudoRemainder var g (sPolynomial' f g var)
 
 ------------------FUNCION QUE OBTIENE LOS PSEUDOREMAINDERS DE UN CONJUNTO DE POLINOMIOS
 getPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
-getPseudoRemainders pols nat var = map (pseudoRemainder nat var divisor) dividens
-        where 
-                divisor = minimalPolyWithVar pols nat var
-                dividens = dividendPolys pols nat var
+        => [OrderedPolynomial k order n] -> Int -> [OrderedPolynomial k order n]
+getPseudoRemainders pols var = map (pseudoRemainder var divisor) dividens
+        where
+                divisor = minimalPolyWithVar pols var
+                dividens = dividendPolys pols var
 
+-- En el nuevo inverted psuedoremainders se tiene encuenta la posicion de los elementos para los cuales se esta dividiendo el polinomio
 invPseudoRemainders :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
-invPseudoRemainders pols pol nat var = map (foo nat var pol) pols
+        => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> [OrderedPolynomial k order n]
+invPseudoRemainders pols pol = map (foo pol) polinomials
         where
-                foo = \sN vari g f -> pseudoRemainder sN vari f g
-        
+                foo = \g f -> pseudoRemainder (snd $ f) (fst $ f) g
+                polinomials = zip pols [0..]
 
----------FUNCION QUE OBTIENE LA CADENA ASCENDENTE (Intento fallido...)-------
 
-ascChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
-ascChain [] chain _ _ = chain
-ascChain [a] chain nat var = getNewChain chain a nat var
-ascChain ideal [] nat var = ascChain newIdeal newChain nat (var+1)
+characteristicWuSet ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> Int -> [OrderedPolynomial k order n]
+characteristicWuSet [a] _ var = [a]
+characteristicWuSet polys [] var = (basisPoly: characteristicWuSet pseudos [basisPoly] (var+1))
         where
-                newIdeal = getNewIdeal pseudos divisor minPoly nat var
-                newChain = getNewChain [] divisor nat var
-                pseudos = map (pseudoRemainder nat var minPoly) dividends
-                minPoly = minimalPolyWithVar ideal nat var
-                dividends = dividendPolys ideal nat var
-                divisor = minimalPolyWithVar (minPoly:pseudos) nat var
-ascChain ideal chain nat var = ascChain newIdeal newChain nat (var+1)
-
+        -- We compute the minimal polynomial of the set
+        minimalPoly = minimalPolyWithVar polys var
+        -- We obtain the basis polynomial of the set
+        basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys var) ) var
+        -- We compute the pseudo remainders for the next iteration
+        pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)
+characteristicWuSet polys oldChain var =  (basisPoly : characteristicWuSet pseudos (oldChain ++ [basisPoly]) (var+1) )
         where
-                minPoly = minimalPolyWithVar ideal nat var
-                dividends = dividendPolys ideal nat var
-                pseudos = map (pseudoRemainder nat var minPoly) dividends
-                divisor = minimalPolyWithVar (pseudos) nat var
-                newChain = getNewChain chain divisor nat var
-                newIdeal = getNewIdeal pseudos divisor (newChain!!0) nat var
+        -- We compute the minimal Polynomial of the set
+        minimalPoly = minimalPolyWithVar polys var
+        -- We compute the basis polynomial of the set
+        basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly) var
+        -- We compute the pseudo remainders for the next iteration
+        pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)
 
-getNewIdeal :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
-getNewIdeal oldIdeal divisor elemChain nat var = map (\a -> if a == divisor && divisor /= elemChain then pseudoRemainder nat var divisor elemChain else a) oldIdeal 
-        
---chain, divisor
-getNewChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] ->  OrderedPolynomial k order n -> SNat n -> Int -> [OrderedPolynomial k order n]
-getNewChain [] divisor nat var = [divisor]
-getNewChain chain divisor nat var = (minInvs:invPseudos) 
+
+characteristicWuSingleton ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> Int -> ([OrderedPolynomial k order n],[OrderedPolynomial k order n])
+characteristicWuSingleton [a] _ var = ([a],[])
+characteristicWuSingleton polys [] var = ([basisPoly], pseudos)
         where
-                invPseudos = invPseudoRemainders chain divisor nat var
-                minInvs = minimalPolyWithVar (invPseudos) nat var
-
------------------------------ FIN DE INTENTO FALLIDO
-
-
-
-
-
-
-ascendentChain :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  ->  [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
--- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
-ascendentChain polys [a] _ sN var = [a]
-ascendentChain polys [] [] sN var =  (possiblePoly: ascendentChain polys pseudos [possiblePoly] sN (var+1))
-        where  
-                minPoly = minimalPolyWithVar polys sN var
-                possiblePoly = minimalPolyWithVar (minPoly : (getPseudoRemainders polys sN var) ) sN var
-                pseudos = map (\p -> if p == possiblePoly && minPoly /= possiblePoly then pseudoRemainder sN var possiblePoly minPoly else p) (getPseudoRemainders polys sN var)
-ascendentChain polys pseudos oldChain sN var =  (checkChainPoly : ascendentChain polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1) )
-                -- En caso de que var == p entonces paramos la funcion
-        where   
-                checkChainPoly = minimalPolyWithVar (invPseudoRemainders oldChain possiblePoly sN var) sN var
-                possiblePoly = minimalPolyWithVar pseudos sN var
-                pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder sN var possiblePoly checkChainPoly else p) (getPseudoRemainders pseudos sN var)                
-
-
-ascendentChainWithConstants :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n]  ->  [OrderedPolynomial k order n] -> SNat n -> Int -> Int -> [OrderedPolynomial k order n]
-        -- La funcion necesita una condicion de parada P que debe ser igual al numero de variables de los polinomios
-ascendentChainWithConstants polys [a] _ sN var lim = [a]
-ascendentChainWithConstants _ _ _ _ _ 0 = []
-ascendentChainWithConstants polys [] [] sN var lim =  (possiblePoly: ascendentChainWithConstants polys pseudos [possiblePoly] sN (var+1) (lim-1))
-        where  
-                minPoly = minimalPolyWithVar polys sN var
-                possiblePoly = minimalPolyWithVar (minPoly : (getPseudoRemainders polys sN var) ) sN var
-                pseudos = map (\p -> if p == possiblePoly && minPoly /= possiblePoly then pseudoRemainder sN var possiblePoly minPoly else p) (getPseudoRemainders polys sN var)
-ascendentChainWithConstants polys pseudos oldChain sN var lim =  (checkChainPoly : ascendentChainWithConstants polys pseudos1 (oldChain ++ [checkChainPoly]) sN (var+1) (lim-1))
-        -- En caso de que var == p entonces paramos la funcion
-        where   
-                checkChainPoly = minimalPolyWithVar (invPseudoRemainders oldChain possiblePoly sN var) sN var
-                possiblePoly = minimalPolyWithVar pseudos sN var
-                pseudos1 = map (\p -> if p == possiblePoly && checkChainPoly /= possiblePoly then pseudoRemainder sN var possiblePoly checkChainPoly else p) (getPseudoRemainders pseudos sN var)                
+        -- We compute the minimal polynomial of the set
+        minimalPoly = minimalPolyWithVar polys var
+        -- We obtain the basis polynomial of the set
+        basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys var) ) var
+        -- We compute the pseudo remainders for the next iteration
+        pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)
+characteristicWuSingleton polys oldChain var =  ((basisPoly:oldChain),  pseudos  )
+        where
+        -- We compute the minimal Polynomial of the set
+        minimalPoly = minimalPolyWithVar polys var
+        -- We compute the basis polynomial of the set
+        basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly) var
+        -- We compute the pseudo remainders for the next iteration
+        pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)
 
 
 
 
-
-
+characteristicWuSetWithStop ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> Int -> Int -> [OrderedPolynomial k order n]
+characteristicWuSetWithStop _ _ _ 0 = []
+characteristicWuSetWithStop [a] _ var stop = [a]
+characteristicWuSetWithStop polys [] var stop = (basisPoly: characteristicWuSetWithStop pseudos [basisPoly] (var+1) (stop -1 ))
+                                where
+                                -- We compute the minimal polinomial of the set
+                                minimalPoly = minimalPolyWithVar polys var
+                                -- We obtain the basis polynomia of the set
+                                basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys var)) var
+                                -- We compute the pseudo remainders for the next iteration
+                                pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)
+characteristicWuSetWithStop polys oldChain var stop =  (basisPoly : characteristicWuSetWithStop pseudos (oldChain ++ [basisPoly]) (var+1) (stop -1) )
+                                where
+                                -- We compute the minimal Polynomial of the set
+                                minimalPoly = minimalPolyWithVar polys var
+                                -- We compute the basis polynomial of the set
+                                basisPoly = minimalPolyWithVar (invPseudoRemainders oldChain minimalPoly) var
+                                -- We compute the pseudo remainders for the next iteration
+                                pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)

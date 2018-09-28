@@ -6,22 +6,26 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-#LANGUAGE TypeSynonymInstances #-}
 {-#LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedLabels, TypeOperators #-}
-
+{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE ExplicitNamespaces, GeneralizedNewtypeDeriving, IncoherentInstances #-}
 
 module Main where
-import Algebra.Prelude                   hiding ((>>),(>>=), fromList)
-import qualified Symbolic.Wu as S
-import Symbolic.PolyClass
-import Symbolic.PolyCompare
+import Algebra.Prelude                   hiding ((>>),(>>=), null)
+import Symbolic.Wu
 import Symbolic.Expr
-import Symbolic.Mon
-import Data.Map.Strict
-import Library.Wu as L
+import qualified Data.Map.Strict as V
+import Library.Wu
+import Library.Mon
+import Library.PolyClass
+import Util.Coeff
+import Test.TestCases
+import qualified Data.Sized.Builtin       as M
 
--- sTwo :: SNat 2
--- sTwo = sing
+sTwo :: SNat 2
+sTwo = sing
 
+sSix :: SNat 6
+sSix = sing
 -- sTwelve :: SNat 12
 -- sTwelve = sing
 
@@ -41,24 +45,24 @@ import Library.Wu as L
 
 
 -- a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r :: Expr Integer
--- a = Expr $ fromList [(["a"],1)]
--- b = Expr $ fromList [(["b"],1)]
--- c = Expr $ fromList [(["c"],1)]
--- d = Expr $ fromList [(["d"],1)]
--- e = Expr $ fromList [(["e"],1)]
--- f = Expr $ fromList [(["f"],1)]
--- g = Expr $ fromList [(["g"],1)]
--- h = Expr $ fromList [(["h"],1)]
--- i = Expr $ fromList [(["i"],1)]
--- j = Expr $ fromList [(["j"],1)]
--- k = Expr $ fromList [(["k"],1)]
--- l = Expr $ fromList [(["l"],1)]
--- m = Expr $ fromList [(["m"],1)]
--- n = Expr $ fromList [(["n"],1)]
--- o = Expr $ fromList [(["o"],1)]
--- p = Expr $ fromList [(["p"],1)]
--- q = Expr $ fromList [(["q"],1)]
--- r = Expr $ fromList [(["r"],1)]
+-- a = Expr $ V.fromList [(["a"],1)]
+-- b = Expr $ V.fromList [(["b"],1)]
+-- c = Expr $ V.fromList [(["c"],1)]
+-- d = Expr $ V.fromList [(["d"],1)]
+-- e = Expr $ V.fromList [(["e"],1)]
+-- f = Expr $ V.fromList [(["f"],1)]
+-- g = Expr $ V.fromList [(["g"],1)]
+-- h = Expr $ V.fromList [(["h"],1)]
+-- i = Expr $ V.fromList [(["i"],1)]
+-- j = Expr $ V.fromList [(["j"],1)]
+-- k = Expr $ V.fromList [(["k"],1)]
+-- l = Expr $ V.fromList [(["l"],1)]
+-- m = Expr $ V.fromList [(["m"],1)]
+-- n = Expr $ V.fromList [(["n"],1)]
+-- o = Expr $ V.fromList [(["o"],1)]
+-- p = Expr $ V.fromList [(["p"],1)]
+-- q = Expr $ V.fromList [(["q"],1)]
+-- r = Expr $ V.fromList [(["r"],1)]
 
 -- q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12:: PolynomialSym 12
 -- q1 = a !* x1^2 + b !* x1*y1 + c !* y1^2 + d !* x1 + e !* y1 + f!*1
@@ -85,12 +89,12 @@ import Library.Wu as L
 -- y = var 1
 
 -- a,b,c,d,e,f :: Expr Integer
--- a = Expr $ fromList [(["a"],1)]
--- b = Expr $ fromList [(["b"],1)]
--- c = Expr $ fromList [(["c"],1)]
--- d = Expr $ fromList [(["d"],1)]
--- e = Expr $ fromList [(["e"],1)]
--- f = Expr $ fromList [(["f"],1)]
+-- a = Expr $ V.fromList [(["a"],1)]
+-- b = Expr $ V.fromList [(["b"],1)]
+-- c = Expr $ V.fromList [(["c"],1)]
+-- d = Expr $ V.fromList [(["d"],1)]
+-- e = Expr $ V.fromList [(["e"],1)]
+-- f = Expr $ V.fromList [(["f"],1)]
 
 -- aa = 2
 -- bb = 1
@@ -101,9 +105,6 @@ import Library.Wu as L
 
 
 
--- q1,q2:: PolynomialSym 2
--- q1 = a !* y^2 +  b !* x^2 + c !* x^3
--- q2 = d !* y^2 + e !* x^2 + f !* 1
 
 -- qq1, qq2 :: Polynomial' 2
 -- qq1 = aa*y^2 +  bb*x^2 + cc* x^3
@@ -123,17 +124,17 @@ z = var 6
 
 
 a,b,c,d,e,f,g,h,i,j :: Expr Integer
-a = Expr $ fromList [(["a"],1)]
-b = Expr $ fromList [(["b"],1)]
-c = Expr $ fromList [(["c"],1)]
-d = Expr $ fromList [(["d"],1)]
-e = Expr $ fromList [(["e"],1)]
-f = Expr $ fromList [(["f"],1)]
-g = Expr $ fromList [(["g"],1)]
-h = Expr $ fromList [(["h"],1)]
-i = Expr $ fromList [(["i"],1)]
-j = Expr $ fromList [(["j"],1)]
-v = Expr $ fromList [(["v"],1)]
+a = Expr $ V.fromList [(["a"],1)]
+b = Expr $ V.fromList [(["b"],1)]
+c = Expr $ V.fromList [(["c"],1)]
+d = Expr $ V.fromList [(["d"],1)]
+e = Expr $ V.fromList [(["e"],1)]
+f = Expr $ V.fromList [(["f"],1)]
+g = Expr $ V.fromList [(["g"],1)]
+h = Expr $ V.fromList [(["h"],1)]
+i = Expr $ V.fromList [(["i"],1)]
+j = Expr $ V.fromList [(["j"],1)]
+v = Expr $ V.fromList [(["v"],1)]
 
 aa = 2
 bb = 1
@@ -142,6 +143,17 @@ dd = 1
 ee = 4
 ff = -2
 
+sN :: (KnownNat n) => Nat -> SNat n
+sN n = sing
+
+
+s1,s2 :: Polynomial' 2
+s1 = y1^2 - x1^2 - x1^3
+s2 = x1^2 + y1^2 - 1
+
+
+p1 :: Polynomial' 7
+p1 = x+y
 
 q1,q2,q3,q4,q5:: PolynomialSym 7
 q1 = a !* x1^2 + b !* y1^2 + c !* z1^2 + d!* (x1 * y1) + e !* (x1 * z1)  + f!* (y1 * z1) +  g !* x1 +  h !* y1 + i !* z1 + j !* 1
@@ -150,11 +162,18 @@ q3 = y - y1 - l1 * ( (2 * b) !* y1 + d !* x1 + f !* z1 + h !* 1 )
 q4 = z - z1 - l1 * ( (2 * c) !* z1 + e !* x1 + f !* y1 + i !* 1 )
 q5 = (x - x1)^2 + (y - y1)^2 + (z - z1)^2 - v * v !* 1
 
-asc = S.characteristicWuSet [q1, q2, q3, q4] [] snat 0
+r1,r2 :: PolynomialSym 2
+r1 = a !* y1^2 + b !* x1^2 + c !* x1^3
+r2 = d !* y1^2 + e !* x1^2 + f !* 1
+
+asc = characteristicWuSetSym [q1, q2, q3, q4] [] 0
 --asc = S.ascendentChain [q1, q2, q3, q4, q5] [] [] sEigmainht 0
 
+prueba :: KnownNat n => [Int] -> Monomial n
+prueba xs = fromList sing xs
 
 main :: IO()
 main = do
       putStrLn "\n Characteristic SET"
       print asc
+
