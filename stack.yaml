@@ -137,6 +137,7 @@ extra-deps:
 - singletons-2.2
 - lazysmallcheck-0.6
 
+- directory-1.3.0.0
 
 #pvp-bounds: both
 

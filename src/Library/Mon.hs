@@ -11,17 +11,21 @@ where
 import Algebra.Prelude   
 import qualified Data.Sized.Builtin     as V
 
-
+        
 --Funcion que converte un arreglo de Int en un Monomio
-toMonomial :: SNat n -> [Int] -> OrderedMonomial ord n
-toMonomial n a = orderMonomial Proxy (fromList n a)
+-- toMonomial :: SNat n -> [Int] -> OrderedMonomial ord n
+-- toMonomial n a = orderMonomial Proxy (fromList n a)
+
+toMonomial :: (KnownNat n) => [Int] -> OrderedMonomial ord n
+toMonomial a = orderMonomial Proxy (fromList sing a)
 
 
 --Genera un polinomio del tipo p(x1,x2,...xn) = xi^k
-mon :: SNat n -> Int -> Int -> OrderedMonomial order n
-mon nat var exp = toMonomial nat exps
+mon :: (IsOrder n order, KnownNat n, IsMonomialOrder n order)
+        => Int -> Int -> Int -> OrderedMonomial order n
+mon var exp numVars = toMonomial exps
         where 
-                zeros = replicate (sNatToInt nat) 0
+                zeros = replicate numVars 0
                 exps = insertAt var exp zeros
 
 insertAt :: Int -> Int-> [Int] -> [Int] 

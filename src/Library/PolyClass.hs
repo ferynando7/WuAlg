@@ -10,6 +10,8 @@ module Library.PolyClass
     leadingMonomial',
     commonMonomial,
     chooseTermsWithVar,
+    varInPoly,
+    numVarPolys,
     dividendPolys,
     classVarDeg
 ) where
@@ -36,76 +38,80 @@ sortPolys (x:xs) =
 
 --Returns the degree of the class variable
 classVarDeg :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => OrderedPolynomial k order n  -> SNat n -> Int -> Int
-classVarDeg pol nat var =  leadingMonomialDegs !! var
+        => OrderedPolynomial k order n -> Int -> Int
+classVarDeg pol var =  leadingMonomialDegs !! var
         where
-                leadingMonomialDegs = V.toList $ getMonomial $ leadingMonomial' pol nat var
-        ---------------------------------------------------------------
+                leadingMonomialDegs = V.toList $ getMonomial $ leadingMonomial' pol var
 
+                ---------------------------------------------------------------
 ------FUNCIONES PARA ACTUALIZAR LA CADENA ASCENDENTE----------------
 --Funcion que obtiene el minimo polinomio con respecto a la variable de clase.
 --Esto es util para saber para cual polinomio dividir
 
 minimalPolyWithVar ::(IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
-         => [OrderedPolynomial k order n] -> SNat n -> Int -> OrderedPolynomial k order n
-minimalPolyWithVar pols nat var
+         => [OrderedPolynomial k order n] -> Int -> OrderedPolynomial k order n
+minimalPolyWithVar pols var
         | listOfPossiblePolys == [] = minimalPoly pols
         | otherwise = minimalPoly listOfPossiblePolys
-        where listOfPossiblePolys = filter (varInPoly nat var) pols
+        where listOfPossiblePolys = filter (varInPoly var) pols
+
+numVarPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k) 
+        => OrderedPolynomial k order n -> Int
+numVarPolys pol =  length $ getMonomial $ fst $ head $ M.toList $ terms pol
+
 
 varInPoly :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => SNat n -> Int -> OrderedPolynomial k order n -> Bool
-varInPoly nat var pol
-        | classVarDeg pol nat var == 0 = False
+        => Int -> OrderedPolynomial k order n -> Bool
+varInPoly var pol
+        | classVarDeg pol var == 0 = False
         | otherwise = True
 
 varInPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => SNat n -> Int -> [OrderedPolynomial k order n] -> Int
-varInPolys nat var pols = foldl foo 0 pols
-                where foo = \acc pol -> if varInPoly nat var pol then acc + 1 else acc
+        => Int -> [OrderedPolynomial k order n] -> Int
+varInPolys var pols = foldl foo 0 pols
+                where foo = \acc pol -> if varInPoly var pol then acc + 1 else acc
 
 minimalPoly :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n
 minimalPoly pols = foldl1 (\acc pol -> if acc << pol then acc else pol) pols
 
 
-
 --Funcion que obtiene los polinomios que seran los divisores
 dividendPolys :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
-        => [OrderedPolynomial k order n] -> SNat n -> Int -> [OrderedPolynomial k order n]
-dividendPolys pols nat var = filter notMinPol pols
+        => [OrderedPolynomial k order n] -> Int -> [OrderedPolynomial k order n]
+dividendPolys pols var = filter notMinPol pols
                         where
-                                notMinPol = \pol -> pol /= minimalPolyWithVar pols nat var
+                                notMinPol = \pol -> pol /= minimalPolyWithVar pols var
 
 leadingTerm' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => OrderedPolynomial k order n -> SNat n -> Int -> (k, OrderedMonomial order n)
-leadingTerm' pol nat var = (snd &&& fst) $ fromJust $ M.lookupLE chosenTerm (_terms pol)
+        => OrderedPolynomial k order n -> Int -> (k, OrderedMonomial order n)
+leadingTerm' pol var = (snd &&& fst) $ fromJust $ M.lookupLE chosenTerm (_terms pol)
         where
-                chosenTerm = toMonomial nat (foldr1 foo polToList)
+                chosenTerm = toMonomial (foldr1 foo polToList)
                 polToList = map (V.toList . getMonomial) (M.keys $ _terms pol)
                 foo = \monomCoeffs acc -> if monomCoeffs!!var > acc!!var then monomCoeffs else acc
 
 leadingMonomial' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => OrderedPolynomial k order n -> SNat n -> Int -> OrderedMonomial order n
-leadingMonomial' pol nat var = snd $ leadingTerm' pol nat var
+        => OrderedPolynomial k order n -> Int -> OrderedMonomial order n
+leadingMonomial' pol var = snd $ leadingTerm' pol var
 
 leadingCoeff' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => OrderedPolynomial k order n -> SNat n -> Int -> k
-leadingCoeff' pol nat var = fst $ leadingTerm' pol nat var
+        => OrderedPolynomial k order n -> Int -> k
+leadingCoeff' pol var = fst $ leadingTerm' pol var
 
 --Takes de leading coef with the non-class variables
 leadingAlgCoeff' :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => OrderedPolynomial k order n -> SNat n -> Int -> (k, OrderedMonomial order n)
-leadingAlgCoeff' pol nat var = (leadingTerm' pol nat var) `tryDiv'` (1, mon nat var degVar)
-                where degVar = classVarDeg pol nat var
+        => OrderedPolynomial k order n -> Int -> (k, OrderedMonomial order n)
+leadingAlgCoeff' pol var = (leadingTerm' pol var) `tryDiv'` (1, mon var degVar (numVarPolys pol))
+                where degVar = classVarDeg pol var
 
 chooseTermsWithVar :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
-        => OrderedPolynomial k order n -> SNat n -> Int -> OrderedPolynomial k order n
-chooseTermsWithVar pol sN var
-                | not $ varInPoly sN var pol = chooseTermsWithVar pol sN (var + 1)
+        => OrderedPolynomial k order n -> Int -> OrderedPolynomial k order n
+chooseTermsWithVar pol var
+                | not $ varInPoly var pol = chooseTermsWithVar pol (var + 1)
                 | otherwise = foldl foo 0 idxs
                 where
-                        deg_pol = classVarDeg pol sN var
+                        deg_pol = classVarDeg pol var
                         idxs = findIndices (\x -> x!!var == deg_pol) (map (V.toList . getMonomial) (M.keys $ _terms pol))
                         foo = \acc idx -> acc + toPolynomial (snd $ auxMonom pol idx , fst $ auxMonom pol idx)
                         auxMonom = \poly idx -> M.elemAt idx $ _terms poly
@@ -156,3 +162,5 @@ gcdCoeff :: (Integral a) => a -> a -> a
 gcdCoeff a b
         | abs a > abs b = if b == 0 then abs a else abs $ gcdCoeff b $ a `mod` b
         | otherwise = if a == 0 then abs b else abs $ gcdCoeff a $ b `mod` a
+
+

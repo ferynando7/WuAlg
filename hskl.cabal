@@ -29,7 +29,8 @@ executable hskl
         containers -any,
         lens -any,
         sized -any,
-        ListLike -any
+        ListLike -any,
+        directory -any
        
   ghc-options: -ferror-spans
 

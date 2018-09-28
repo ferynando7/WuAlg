@@ -6,7 +6,8 @@
 module Symbolic.Expr
 (
     Expr(..),
-    simplify
+    simplify,
+    showTermSym
 ) where
 
 import qualified Algebra.Prelude  as AP hiding ((++), (+), (-), (*), (^))
@@ -29,7 +30,7 @@ import Algebra.Scalar
 
 infixl 5 :/:, :%:
 
-data Expr a =   Expr (AP.Map [String] a) 
+data Expr a =   Expr (Map [String] a) 
                 | (Expr a) :/: (Expr a)
                 | (Expr a) :%: (Expr a)
                 deriving (Eq)
