@@ -30,7 +30,7 @@ type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 
 sPolynomialSym' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
             => OrderedPolynomial k order n  -> OrderedPolynomial k order n -> Int -> OrderedPolynomial k order n
-sPolynomialSym' f g i = (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
+sPolynomialSym' f g i = simplifyTermSym (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simplifyMonomial factorsg) * f - toPolynomial (h `tryDiv'` (one, commonLeadg ) ) * (simplifyMonomial factorsf)* g)
                         where
                         h = (one, lcmMonomial (leadingMonomial' f i) (leadingMonomial' g i) )
                         factorsg = chooseTermsWithVar g i
@@ -38,6 +38,9 @@ sPolynomialSym' f g i = (toPolynomial (h `tryDiv'` (one, commonLeadf )) * (simpl
                         commonLeadf = commonMonomial factorsf  -- Obtiene el factor comun de la variable de clase del polinomio f
                         commonLeadg = commonMonomial factorsg -- Obtiene el factor comun de la variable de clase del polinomio g
 
+simplifyTermSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => OrderedPolynomial k order n -> OrderedPolynomial k order n
+simplifyTermSym pol  = pol // (one, commonMonomial pol)
 
 pseudoRemainderSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
                     => Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
