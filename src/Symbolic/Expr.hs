@@ -8,7 +8,10 @@ module Symbolic.Expr
     Expr(..),
     simplify,
     showTermSym,
+    evaluate,
     fromString
+    fromExpr,
+    toExpr
 ) where
 
 import qualified Algebra.Prelude  as AP hiding ((++), (+), (-), (*), (^))
@@ -20,7 +23,7 @@ import qualified Numeric.Additive.Group as G
 import Numeric.Algebra.Unital
 import qualified Numeric.Ring.Class as NR
 import Numeric.Rig.Class
-import Numeric.Decidable.Zero 
+import Numeric.Decidable.Zero
 import Numeric.Algebra.Commutative
 import Data.Type.Natural hiding (one)
 import qualified Data.Map.Strict as M
@@ -32,7 +35,7 @@ import Algebra.Scalar
 
 infixl 5 :/:, :%:
 
-data Expr a =   Expr (M.Map [String] a) 
+data Expr a =   Expr (Map [String] a)
                 | (Expr a) :/: (Expr a)
                 | (Expr a) :%: (Expr a)
                 deriving (Eq)
@@ -56,9 +59,9 @@ instance (Ord a) => Ord (Expr a) where
     Expr a `compare` Expr b
         | M.size a < M.size b = LT
         | otherwise = GT
-    
 
-instance (Integral a) => A.Additive (Expr a) where 
+
+instance (Integral a) => A.Additive (Expr a) where
     Expr a + Expr b = simplify $ suma (Expr a) (Expr b)
 
 
@@ -90,7 +93,7 @@ instance Rig (Expr Integer) where
 instance G.Group (Expr Integer) where
     (Expr a) - (Expr b) = let newB = M.map negate b
                             in suma (Expr a) (Expr newB)
-              
+
 instance N.Semiring (Expr Integer)
 
 instance Unital (Expr Integer) where
@@ -108,10 +111,10 @@ instance PrettyCoeff (Expr Integer)
 instance Num (Expr Integer) where
     (+) = suma
     (*) = prodSym
-    
+
     signum a = one
 
-    abs a = a 
+    abs a = a
     a - b = suma a (negate b)
 
     fromInteger c = Symbolic.Expr.fromInteger c
@@ -146,31 +149,31 @@ instance AP.UnitNormalForm (Expr Integer) where
     splitUnit n = (signum n, abs n)
 
 instance AP.Euclidean (Expr Integer) where
-    degree a = if isZero a then Nothing else Just 1 
+    degree a = if isZero a then Nothing else Just 1
     divide = divMod
 
 instance Integral (Expr Integer) where
     a `quot` b
         | isZero b                   = GR.divZeroError
         | otherwise                  = a :/: b
-    
+
     a `rem` b
         | isZero b                   = GR.divZeroError
         | b == negate one            = Expr M.empty
         | otherwise                  = a :%: b
-    
+
     div = divSym
 
     a `quotRem` b
         | isZero b                   = GR.divZeroError
-        | otherwise                  = ((quot a b), (rem a b))     
+        | otherwise                  = ((quot a b), (rem a b))
 
     toInteger a = 1
 
 instance Enum (Expr Integer) where
     toEnum c = Symbolic.Expr.fromInteger $ toInteger c
     fromEnum a = 1
-  
+
 
 
 suma :: (Eq a, Num a, Integral a) => Expr a -> Expr a -> Expr a
@@ -202,7 +205,7 @@ prodList  (x:xs) y = (map (*** x) y) ++ prodList xs y
 --Multiply two terms
 (***) :: (Num a) => ([String], a) -> ([String], a) -> ([String], a)
 (l1, c1) *** (l2, c2)
-        | l1 == [""] = (l2, c1*c2) 
+        | l1 == [""] = (l2, c1*c2)
         | l2 == [""] = (l1, c1*c2)
         | otherwise = (L.sort $ l1 ++ l2, c1*c2)
 
@@ -222,3 +225,15 @@ fromString str = Expr $ M.fromList [([str],1)]
 
 fromInteger :: Integer -> Expr Integer
 fromInteger int = Expr $ M.fromList [([""],int)]
+
+
+evaluate :: Expr Integer -> String -> Integer -> Expr Integer
+evaluate (Expr a) str val = Expr $ newMap
+      where
+            newMap = M.fromList $ map (evalTerm str val) $ M.toList a
+            evalTerm _ _ ([""], n) = ([""], n)
+            evalTerm str val (lst, n) = (filter (/= str) lst, n*val^value)
+                  where 
+                        lengthList = length lst
+                        lengthFiltered = length $ filter (/= str) lst
+                        value =  fromIntegral (lengthList - lengthFiltered)

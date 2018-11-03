@@ -23,6 +23,7 @@ import qualified Data.Sized.Builtin     as V
 import Data.Maybe                       (fromJust)
 import Library.PolyCompare
 import Library.Mon
+import Symbolic.Expr
 
 --Quicksort for polys
 sortPolys :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k, Division k)
@@ -56,7 +57,7 @@ minimalPolyWithVar pols var
         | otherwise = minimalPoly listOfPossiblePolys
         where listOfPossiblePolys = filter (varInPoly var) pols
 
-numVarPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k) 
+numVarPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
         => OrderedPolynomial k order n -> Int
 numVarPolys pol =  length $ getMonomial $ fst $ head $ M.toList $ terms pol
 
@@ -127,6 +128,9 @@ chooseTermsWithList pol idxs var = foldl foo 0 idxs
                         auxMonom = \poly idx -> M.elemAt idx $ _terms poly
 
 
+--
+
+
                         -- Funcion que permite simplificar un polinomio en caso de que este tenga una expresion en commun en todos los monomios.
 simplifyMonomial :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
@@ -163,5 +167,3 @@ gcdCoeff :: (Integral a) => a -> a -> a
 gcdCoeff a b
         | abs a > abs b = if b == 0 then abs a else abs $ gcdCoeff b $ a `mod` b
         | otherwise = if a == 0 then abs b else abs $ gcdCoeff a $ b `mod` a
-
-
