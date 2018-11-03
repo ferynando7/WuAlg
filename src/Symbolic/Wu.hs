@@ -11,7 +11,8 @@ module Symbolic.Wu
     changeVariablesList,
     newAscChain,
     printPolys,
-    reducePolynomial
+    reducePolynomial,
+    simplifyNumSym
 
 ) where
 
@@ -23,10 +24,23 @@ import Symbolic.Expr
 import Util.Coeff
 import System.Directory
 import qualified Data.Sized.Builtin       as M
+import qualified Data.Map.Strict        as MS
 import System.IO (writeFile, appendFile)
 
 type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Funcion que saca gcd de los coeficientes de un polinomio
+simplifyNumSym :: (KnownNat n )
+            => PolynomialSym n -> PolynomialSym n
+simplifyNumSym pol =  Polynomial $ V.fromList $ map (\(mon, coef)  -> (mon,  toExpr $ MS.map (`div` gcdnum) $ fromExpr coef) ) $ MS.toList  $ _terms pol
+                where
+                  coefficients =  map MS.elems $ map (fromExpr) $  map (snd) $  MS.toList $ _terms pol
+                  -- Here we obtain the coefficients of the polynomial
+                  gcdnum =  foldl1 gcd $ map (foldl1 gcd) $ coefficients
+                  --  Here we get the gcd of the coeficients
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 sPolynomialSym' :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
             => OrderedPolynomial k order n  -> OrderedPolynomial k order n -> Int -> OrderedPolynomial k order n
@@ -141,7 +155,7 @@ changeVariables pol step  coeff = Polynomial $ V.fromList $ zipWith (\(a,b) c ->
 changeVariablesList :: (KnownNat n) => [PolynomialSym n] -> Int -> Coeff -> [PolynomialSym n]
 changeVariablesList [] _ _ = []
 changeVariablesList (x:xs) var coeff = (newPolX : changeVariablesList xs var (succ lastCoeff))
-        where 
+        where
                 newPolX = changeVariables x var coeff
                 lastCoeff = (toCoeff . snd . head . V.toList . terms) newPolX
 
@@ -150,10 +164,10 @@ changeVariablesList (x:xs) var coeff = (newPolX : changeVariablesList xs var (su
 newAscChain :: (KnownNat n1) => [PolynomialSym n1] -> Int -> IO ()
 newAscChain [] _= return ()
 newAscChain pols var = do
-                placeToSaveAscChain <- fmap (++ ("/src/Results/AscChainStep"++ (show var)++".txt")) getCurrentDirectory 
+                placeToSaveAscChain <- fmap (++ ("/src/Results/AscChainStep"++ (show var)++".txt")) getCurrentDirectory
                 placeToSaveNewSet <- fmap (++ ("/src/Results/NewSetStep"++ (show var)++".txt")) getCurrentDirectory
-                placeToSaveCoeffs <- fmap (++ ("/src/Results/CoeffsStep"++ (show var)++".txt")) getCurrentDirectory 
-                let thingToSave = characteristicWuSingletonSym pols [] var
+                placeToSaveCoeffs <- fmap (++ ("/src/Results/CoeffsStep"++ (show var)++".txt")) getCurrentDirectory
+                let thingToSave = ( \(a,b) -> (map simplifyNumSym a, map simplifyNumSym b) ) $ characteristicWuSingletonSym pols [] var
                 let newSet = changeVariablesList (snd thingToSave) var (Coeff "a")
                 --let newSetReduced = map (reducePolynomial (sN $ (fromIntegral (numVarPolys $ head newSet) :: Nat)) nat2)  newSet
                 writeCoeffs <- printCoeffs newSet (snd thingToSave) placeToSaveCoeffs
@@ -163,12 +177,12 @@ newAscChain pols var = do
                 --(sN $ ((fromIntegral ((numVarPolys $ head newSetReduced)-1)) :: Nat ))
 
 --Dado una lista de polinomios y un path, imprime los polinomios linea por linea en dicho path
-printPolys :: (IsOrder n order, KnownNat n, PrettyCoeff k, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k) 
+printPolys :: (IsOrder n order, KnownNat n, PrettyCoeff k, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> FilePath -> IO ()
 printPolys [] _ = return ()
-printPolys (x:xs) path = do 
+printPolys (x:xs) path = do
                         a <- appendFile path $ show x ++ "\n"
-                        printPolys xs path  
+                        printPolys xs path
 
 -- toma dos listas a b, imprime sus terminos haciendolos corresponder de la siguente forma
 -- a1 = b1
@@ -182,7 +196,7 @@ printList (x:xs) (y:ys) path = do
                         a <- appendFile path $ show x ++ " = " ++ show y ++ "\n"
                         printList xs ys path
 
-printCoeffs :: (IsOrder n order, KnownNat n, Eq k, Show k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k) 
+printCoeffs :: (IsOrder n order, KnownNat n, Eq k, Show k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n] -> FilePath -> IO ()
 printCoeffs [] [] _ = return ()
 printCoeffs new@(n:ns) old@(o:os) path = do
@@ -194,7 +208,7 @@ printCoeffs new@(n:ns) old@(o:os) path = do
 
 
 reducePolynomial :: (IsOrder n1 order, KnownNat n1, Eq k, Num k, Ord k, IsMonomialOrder n1 order, Euclidean k, Integral k,
-                     IsOrder n2 order, KnownNat n2 ,IsMonomialOrder n2 order) 
+                     IsOrder n2 order, KnownNat n2 ,IsMonomialOrder n2 order)
         => SNat n1  -> SNat n2 ->OrderedPolynomial k order n1 -> OrderedPolynomial k order n2
 reducePolynomial nat1 nat2 pol = Polynomial $ V.fromList $ zipWith (,) newAlgPart coeffs
 --        | varInPoly nat1 0 pol /= 0 = pol
@@ -203,5 +217,4 @@ reducePolynomial nat1 nat2 pol = Polynomial $ V.fromList $ zipWith (,) newAlgPar
                         polToList = reverse $ V.toList $ terms pol
                         algPart = map fst polToList
                         coeffs = map snd polToList
-                        newAlgPart = map (toMonomial) $ (map (tail . M.toList . getMonomial)) algPart              
-                        
+                        newAlgPart = map (toMonomial) $ (map (tail . M.toList . getMonomial)) algPart

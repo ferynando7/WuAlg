@@ -7,7 +7,9 @@ module Symbolic.Expr
 (
     Expr(..),
     simplify,
-    showTermSym
+    showTermSym,
+    fromExpr,
+    toExpr
 ) where
 
 import qualified Algebra.Prelude  as AP hiding ((++), (+), (-), (*), (^))
@@ -19,7 +21,7 @@ import qualified Numeric.Additive.Group as G
 import Numeric.Algebra.Unital
 import qualified Numeric.Ring.Class as NR
 import Numeric.Rig.Class
-import Numeric.Decidable.Zero 
+import Numeric.Decidable.Zero
 import Numeric.Algebra.Commutative
 import Data.Type.Natural hiding (one)
 import Data.Map.Strict
@@ -30,7 +32,7 @@ import Algebra.Scalar
 
 infixl 5 :/:, :%:
 
-data Expr a =   Expr (Map [String] a) 
+data Expr a =   Expr (Map [String] a)
                 | (Expr a) :/: (Expr a)
                 | (Expr a) :%: (Expr a)
                 deriving (Eq)
@@ -54,24 +56,24 @@ instance (Ord a) => Ord (Expr a) where
     Expr a `compare` Expr b
         | size a < size b = LT
         | otherwise = GT
-    
 
-instance (Integral a) => A.Additive (Expr a) where 
+
+instance (Integral a) => A.Additive (Expr a) where
     Expr a + Expr b = simplify $ suma (Expr a) (Expr b)
 
 
 instance N.RightModule Natural (Expr Integer) where
-    Expr a *. n = Expr $ map (* (toInteger n)) a 
+    Expr a *. n = Expr $ map (* (toInteger n)) a
 
 instance N.LeftModule Natural (Expr Integer) where
     n .* Expr a = Expr $ map (* (toInteger n)) a
-         
+
 instance N.RightModule Integer (Expr Integer) where
-    Expr a *. n = Expr $ map (*n) a        
+    Expr a *. n = Expr $ map (*n) a
 
 instance N.LeftModule Integer (Expr Integer) where
     n .* Expr a = Expr $ map (*n) a
-    
+
 instance N.Monoidal (Expr Integer) where
     zero = Expr empty
 
@@ -88,7 +90,7 @@ instance Rig (Expr Integer) where
 instance G.Group (Expr Integer) where
     (Expr a) - (Expr b) = let newB = map negate b
                             in suma (Expr a) (Expr newB)
-              
+
 instance N.Semiring (Expr Integer)
 
 instance Unital (Expr Integer) where
@@ -106,10 +108,10 @@ instance PrettyCoeff (Expr Integer)
 instance Num (Expr Integer) where
     (+) = suma
     (*) = prodSym
-    
+
     signum a = one
 
-    abs a = a 
+    abs a = a
     a - b = suma a (negate b)
 
     fromInteger c = Expr $ fromList [([""], c)]
@@ -144,35 +146,35 @@ instance AP.UnitNormalForm (Expr Integer) where
     splitUnit n = (signum n, abs n)
 
 instance AP.Euclidean (Expr Integer) where
-    degree a = if isZero a then Nothing else Just 1 
+    degree a = if isZero a then Nothing else Just 1
     divide = divMod
 
 instance Integral (Expr Integer) where
     a `quot` b
         | isZero b                   = GR.divZeroError
         | otherwise                  = a :/: b
-    
+
     a `rem` b
         | isZero b                   = GR.divZeroError
         | b == negate one            = Expr empty
         | otherwise                  = a :%: b
-    
+
     div = divSym
 
     a `quotRem` b
         | isZero b                   = GR.divZeroError
-        | otherwise                  = ((quot a b), (rem a b))     
+        | otherwise                  = ((quot a b), (rem a b))
 
     toInteger a = 1
 
 instance Enum (Expr Integer) where
     toEnum c = Expr $ fromList [([""], toInteger c)]
     fromEnum a = 1
-  
+
 
 
 suma :: (Eq a, Num a, Integral a) => Expr a -> Expr a -> Expr a
-suma (Expr a) (Expr b) = simplify $ Expr $ unionWith (+) a b 
+suma (Expr a) (Expr b) = simplify $ Expr $ unionWith (+) a b
 
 prodSym :: (Integral a, Num a) => Expr a -> Expr a -> Expr a
 -- prodSym _ zero = zero
@@ -194,13 +196,13 @@ insertFull (x:xs) = unionWith (+) (insertFull [x]) (insertFull xs)
 -- Multiply two list of terms
 prodList :: (Num a) => [([String], a)] -> [([String], a)] -> [([String], a)]
 prodList [] _ = []
-prodList  (x:xs) y = (AP.map (*** x) y) ++ prodList xs y  
+prodList  (x:xs) y = (AP.map (*** x) y) ++ prodList xs y
 
 
 --Multiply two terms
 (***) :: (Num a) => ([String], a) -> ([String], a) -> ([String], a)
 (l1, c1) *** (l2, c2)
-        | l1 == [""] = (l2, c1*c2) 
+        | l1 == [""] = (l2, c1*c2)
         | l2 == [""] = (l1, c1*c2)
         | otherwise = (AP.sort $ l1 ++ l2, c1*c2)
 
@@ -214,3 +216,8 @@ divSym a b = a :/: b
 simplify :: (Num a, Eq a, Integral a) => Expr a -> Expr a
 simplify (Expr a) = Expr $ filter (/=0) a
 
+toExpr :: Map [String] a -> Expr a
+toExpr  a = Expr a
+
+fromExpr :: Expr a -> Map [String] a
+fromExpr (Expr a) = a

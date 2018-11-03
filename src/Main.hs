@@ -24,9 +24,10 @@ import Ejemplos.GeneralizedSurface
 import Ejemplos.Spheres
 import Ejemplos.Strofoid
 import qualified Data.Sized.Builtin       as M
+import qualified Data.Map.Strict        as MS
+
 
 main :: IO()
 main = do
       putStrLn "\n Characteristic SET"
      -- print asc
-

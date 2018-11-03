@@ -51,7 +51,7 @@ ss2 = d !* y^2 + e !* x^2 + f !* 1
 strofoidSymbolic :: (IsOrder n order, KnownNat n, Eq k, Num k, PrettyCoeff k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
     => [OrderedPolynomial k order n] -> IO()
 strofoidSymbolic pols
-    | (show $ characteristicWuSetSym pols [] 0) == "[(-1cde) X_0 X_1^2 + (1aee+-1bde) X_1^2 + (-1cef) X_0 + (-1bef),(1ccdddee) X_1^10 + (1aaeeeee+-2abdeeee+1bbddeee+3ccddeef) X_1^8 + (-2abeeeef+2bbdeeef+3ccdeeff) X_1^6 + (1bbeeeff+1cceefff) X_1^4]" = putStrLn "strofoidSymbolic SUCCESSFUL"
+    | (show $ characteristicWuSetSym pols [] 0) == "[(-1cde) X_0 X_1^2 + (1aee+-1bde) X_1^2 + (-1cef) X_0 + (-1bef),(1ccdddee) X_1^6 + (1aaeeeee+-2abdeeee+1bbddeee+3ccddeef) X_1^4 + (-2abeeeef+2bbdeeef+3ccdeeff) X_1^2 + (1bbeeeff+1cceefff)]" = putStrLn "strofoidSymbolic SUCCESSFUL"
     | otherwise = putStrLn "strofoidSymbolic FAILED"
 
 test :: IO ()
