@@ -12,7 +12,7 @@
 
 module Test.TestCases (test) where
 
-import Algebra.Prelude
+import Algebra.Prelude hiding (fromString)
 import Library.Wu
 import Symbolic.Wu
 import Symbolic.Expr
@@ -37,12 +37,12 @@ strofoidNumeric pols
 
 --Test for strofoid symbolic
 a,b,c,d,e,f :: Expr Integer
-a = Expr $ M.fromList [(["a"],1)]
-b = Expr $ M.fromList [(["b"],1)]
-c = Expr $ M.fromList [(["c"],1)]
-d = Expr $ M.fromList [(["d"],1)]
-e = Expr $ M.fromList [(["e"],1)]
-f = Expr $ M.fromList [(["f"],1)]
+a = fromString "a"
+b = fromString "b"
+c = fromString "c"
+d = fromString "d"
+e = fromString "e"
+f = fromString "f"
 
 ss1,ss2:: PolynomialSym 2
 ss1 = a !* y^2 +  b !* x^2 + c !* x^3

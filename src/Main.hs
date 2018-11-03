@@ -10,10 +10,10 @@
 {-# LANGUAGE ExplicitNamespaces, GeneralizedNewtypeDeriving, IncoherentInstances #-}
 
 module Main where
-import Algebra.Prelude                   hiding ((>>),(>>=), null)
+import Algebra.Prelude                   hiding ((>>),(>>=), null, fromString)
 import Symbolic.Wu
 import Symbolic.Expr
-import qualified Data.Map.Strict as V
+import qualified Data.Map.Strict as M
 import Library.Wu
 import Library.Mon
 import Library.PolyClass
@@ -23,8 +23,8 @@ import Ejemplos.Conicas
 import Ejemplos.GeneralizedSurface
 import Ejemplos.Spheres
 import Ejemplos.Strofoid
-import qualified Data.Sized.Builtin       as M
-import qualified Data.Map.Strict        as MS
+import qualified Data.Sized.Builtin as S
+
 
 
 main :: IO()

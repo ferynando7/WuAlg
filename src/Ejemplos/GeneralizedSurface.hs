@@ -3,7 +3,7 @@
 
 module Ejemplos.GeneralizedSurface (idealGenSur) where
 
-    import Algebra.Prelude
+    import Algebra.Prelude hiding (fromString)
     import Symbolic.Wu
     import Data.Map.Strict as M
     import Symbolic.Expr
@@ -19,17 +19,17 @@ module Ejemplos.GeneralizedSurface (idealGenSur) where
 
 
     a,b,c,d,e,f,g,h,i,j :: Expr Integer
-    a = Expr $ M.fromList [(["a"],1)]
-    b = Expr $ M.fromList [(["b"],1)]
-    c = Expr $ M.fromList [(["c"],1)]
-    d = Expr $ M.fromList [(["d"],1)]
-    e = Expr $ M.fromList [(["e"],1)]
-    f = Expr $ M.fromList [(["f"],1)]
-    g = Expr $ M.fromList [(["g"],1)]
-    h = Expr $ M.fromList [(["h"],1)]
-    i = Expr $ M.fromList [(["i"],1)]
-    j = Expr $ M.fromList [(["j"],1)]
-    v = Expr $ M.fromList [(["v"],1)]
+    a = fromString "a"
+    b = fromString "b"
+    c = fromString "c"
+    d = fromString "d"
+    e = fromString "e"
+    f = fromString "f"
+    g = fromString "g"
+    h = fromString "h"
+    i = fromString "i"
+    j = fromString "j"
+    v = fromString "v"
 
 
     q1,q2,q3,q4,q5:: PolynomialSym 7
