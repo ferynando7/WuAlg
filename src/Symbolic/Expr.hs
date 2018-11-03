@@ -53,7 +53,7 @@ showSym (x:xs) = showSym [x] ++ "+" ++ showSym xs
 showTermSym :: [String] -> String
 showTermSym [] = ""
 showTermSym [x] = x
-showTermSym (x:xs) = x ++ "*" ++ showTermSym xs
+showTermSym (x:xs) = x ++ "*" ++  showTermSym xs
 
 instance (Ord a) => Ord (Expr a) where
     Expr a `compare` Expr b
@@ -219,6 +219,11 @@ divSym a b = a :/: b
 simplify :: (Num a, Eq a, Integral a) => Expr a -> Expr a
 simplify (Expr a) = Expr $ M.filter (/=0) a
 
+toExpr :: M.Map [String] a -> Expr a
+toExpr  a = Expr a
+
+fromExpr :: Expr a -> M.Map [String] a
+fromExpr (Expr a) = a
 
 fromString :: String -> Expr Integer
 fromString str = Expr $ M.fromList [([str],1)]

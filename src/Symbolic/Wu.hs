@@ -56,10 +56,6 @@ simplifyTermSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n 
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
 simplifyTermSym pol  = pol // (one, commonMonomial pol)
 
-simplifyTermSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
-        => OrderedPolynomial k order n -> OrderedPolynomial k order n
-simplifyTermSym pol  = pol // (one, commonMonomial pol)
-
 pseudoRemainderSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
                     => Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
 pseudoRemainderSym var g f
