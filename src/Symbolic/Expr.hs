@@ -8,13 +8,15 @@ module Symbolic.Expr
     Expr(..),
     simplify,
     showTermSym,
+    evaluate,
+    fromString,
     fromExpr,
     toExpr
 ) where
 
 import qualified Algebra.Prelude  as AP hiding ((++), (+), (-), (*), (^))
 import Algebra.Ring.Polynomial.Class
-import Prelude hiding (map, null, filter)
+import Prelude hiding (null, filter)
 import qualified Numeric.Algebra.Class as N hiding ((+), (-), (^))
 import qualified Numeric.Additive.Class as A
 import qualified Numeric.Additive.Group as G
@@ -24,7 +26,8 @@ import Numeric.Rig.Class
 import Numeric.Decidable.Zero
 import Numeric.Algebra.Commutative
 import Data.Type.Natural hiding (one)
-import Data.Map.Strict
+import qualified Data.Map.Strict as M
+import qualified Data.List as L
 import GHC.TypeLits
 import GHC.Natural
 import qualified GHC.Real as GR
@@ -32,14 +35,14 @@ import Algebra.Scalar
 
 infixl 5 :/:, :%:
 
-data Expr a =   Expr (Map [String] a)
+data Expr a =   Expr (M.Map [String] a)
                 | (Expr a) :/: (Expr a)
                 | (Expr a) :%: (Expr a)
                 deriving (Eq)
 
 instance Show (Expr Integer) where
-    show (Expr a) = "("++ showSym (toList a)++")"
-    show (Expr a :/: Expr b) = showSym (toList a) ++ "/" ++ showSym (toList b)
+    show (Expr a) = "("++ showSym (M.toList a)++")"
+    show (Expr a :/: Expr b) = showSym (M.toList a) ++ "/" ++ showSym (M.toList b)
 
 
 showSym :: [([String],Integer)] -> String
@@ -50,11 +53,11 @@ showSym (x:xs) = showSym [x] ++ "+" ++ showSym xs
 showTermSym :: [String] -> String
 showTermSym [] = ""
 showTermSym [x] = x
-showTermSym (x:xs) = x ++ showTermSym xs
+showTermSym (x:xs) = x ++ "*" ++  showTermSym xs
 
 instance (Ord a) => Ord (Expr a) where
     Expr a `compare` Expr b
-        | size a < size b = LT
+        | M.size a < M.size b = LT
         | otherwise = GT
 
 
@@ -63,38 +66,38 @@ instance (Integral a) => A.Additive (Expr a) where
 
 
 instance N.RightModule Natural (Expr Integer) where
-    Expr a *. n = Expr $ map (* (toInteger n)) a
+    Expr a *. n = Expr $ M.map (* (toInteger n)) a 
 
 instance N.LeftModule Natural (Expr Integer) where
-    n .* Expr a = Expr $ map (* (toInteger n)) a
-
+    n .* Expr a = Expr $ M.map (* (toInteger n)) a
+         
 instance N.RightModule Integer (Expr Integer) where
-    Expr a *. n = Expr $ map (*n) a
+    Expr a *. n = Expr $ M.map (*n) a        
 
 instance N.LeftModule Integer (Expr Integer) where
-    n .* Expr a = Expr $ map (*n) a
-
+    n .* Expr a = Expr $ M.map (*n) a
+    
 instance N.Monoidal (Expr Integer) where
-    zero = Expr empty
+    zero = Expr M.empty
 
 instance DecidableZero (Expr Integer) where
-    isZero (Expr a) | null a = True
+    isZero (Expr a) | M.null a = True
                     | otherwise = False
 
 instance AP.Ring (Expr Integer) where
-    fromInteger a = Expr $ fromList [([""], a)]
+    fromInteger a = Symbolic.Expr.fromInteger a
 
 instance Rig (Expr Integer) where
-    fromNatural a = Expr $ fromList [([""], toInteger a)]
+    fromNatural a = Symbolic.Expr.fromInteger $ toInteger a
 
 instance G.Group (Expr Integer) where
-    (Expr a) - (Expr b) = let newB = map negate b
+    (Expr a) - (Expr b) = let newB = M.map negate b
                             in suma (Expr a) (Expr newB)
 
 instance N.Semiring (Expr Integer)
 
 instance Unital (Expr Integer) where
-    one = Expr $ fromList [([""],1)]
+    one = Symbolic.Expr.fromInteger 1
 
 instance A.Abelian (Expr Integer)
 
@@ -114,7 +117,7 @@ instance Num (Expr Integer) where
     abs a = a
     a - b = suma a (negate b)
 
-    fromInteger c = Expr $ fromList [([""], c)]
+    fromInteger c = Symbolic.Expr.fromInteger c
 
 
 instance AP.UFD (Expr Integer)
@@ -156,7 +159,7 @@ instance Integral (Expr Integer) where
 
     a `rem` b
         | isZero b                   = GR.divZeroError
-        | b == negate one            = Expr empty
+        | b == negate one            = Expr M.empty
         | otherwise                  = a :%: b
 
     div = divSym
@@ -168,13 +171,13 @@ instance Integral (Expr Integer) where
     toInteger a = 1
 
 instance Enum (Expr Integer) where
-    toEnum c = Expr $ fromList [([""], toInteger c)]
+    toEnum c = Symbolic.Expr.fromInteger $ toInteger c
     fromEnum a = 1
 
 
 
 suma :: (Eq a, Num a, Integral a) => Expr a -> Expr a -> Expr a
-suma (Expr a) (Expr b) = simplify $ Expr $ unionWith (+) a b
+suma (Expr a) (Expr b) = simplify $ Expr $ M.unionWith (+) a b 
 
 prodSym :: (Integral a, Num a) => Expr a -> Expr a -> Expr a
 -- prodSym _ zero = zero
@@ -183,20 +186,20 @@ prodSym :: (Integral a, Num a) => Expr a -> Expr a -> Expr a
 -- prodSym one a = a
 prodSym (Expr a) (Expr b) = Expr (insertFull prod)
     where
-        listA = toList a
-        listB = toList b
+        listA = M.toList a
+        listB = M.toList b
         prod = prodList listA listB
 
 
-insertFull :: (Num a) => [([String], a)] -> Map [String] a
-insertFull [] = empty
-insertFull [(k,v)] = singleton k v
-insertFull (x:xs) = unionWith (+) (insertFull [x]) (insertFull xs)
+insertFull :: (Num a) => [([String], a)] -> M.Map [String] a
+insertFull [] = M.empty
+insertFull [(k,v)] = M.singleton k v
+insertFull (x:xs) = M.unionWith (+) (insertFull [x]) (insertFull xs)
 
 -- Multiply two list of terms
 prodList :: (Num a) => [([String], a)] -> [([String], a)] -> [([String], a)]
 prodList [] _ = []
-prodList  (x:xs) y = (AP.map (*** x) y) ++ prodList xs y
+prodList  (x:xs) y = (map (*** x) y) ++ prodList xs y  
 
 
 --Multiply two terms
@@ -204,7 +207,7 @@ prodList  (x:xs) y = (AP.map (*** x) y) ++ prodList xs y
 (l1, c1) *** (l2, c2)
         | l1 == [""] = (l2, c1*c2)
         | l2 == [""] = (l1, c1*c2)
-        | otherwise = (AP.sort $ l1 ++ l2, c1*c2)
+        | otherwise = (L.sort $ l1 ++ l2, c1*c2)
 
 
 divSym :: (Num a) => Expr a -> Expr a -> Expr a
@@ -214,10 +217,28 @@ divSym a one = a
 divSym a b = a :/: b
 
 simplify :: (Num a, Eq a, Integral a) => Expr a -> Expr a
-simplify (Expr a) = Expr $ filter (/=0) a
+simplify (Expr a) = Expr $ M.filter (/=0) a
 
-toExpr :: Map [String] a -> Expr a
+toExpr :: M.Map [String] a -> Expr a
 toExpr  a = Expr a
 
-fromExpr :: Expr a -> Map [String] a
+fromExpr :: Expr a -> M.Map [String] a
 fromExpr (Expr a) = a
+
+fromString :: String -> Expr Integer
+fromString str = Expr $ M.fromList [([str],1)]
+
+fromInteger :: Integer -> Expr Integer
+fromInteger int = Expr $ M.fromList [([""],int)]
+
+
+evaluate :: Expr Integer -> String -> Integer -> Expr Integer
+evaluate (Expr a) str val = Expr $ newMap
+      where
+            newMap = M.fromList $ map (evalTerm str val) $ M.toList a
+            evalTerm _ _ ([""], n) = ([""], n)
+            evalTerm str val (lst, n) = (L.filter (/= str) lst, n*val^value)
+                  where 
+                        lengthList = length lst
+                        lengthFiltered = length $ L.filter (/= str) lst
+                        value =  fromIntegral (lengthList - lengthFiltered)

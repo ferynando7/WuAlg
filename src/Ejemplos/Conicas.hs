@@ -3,7 +3,7 @@
 
 module Ejemplos.Conicas (idealConicas) where
 
-    import Algebra.Prelude
+    import Algebra.Prelude hiding (fromString)
     import Symbolic.Wu
     import Data.Map.Strict as M
     import Symbolic.Expr
@@ -23,24 +23,24 @@ module Ejemplos.Conicas (idealConicas) where
 
 
     a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r :: Expr Integer
-    a = Expr $ M.fromList [(["a"],1)]
-    b = Expr $ M.fromList [(["b"],1)]
-    c = Expr $ M.fromList [(["c"],1)]
-    d = Expr $ M.fromList [(["d"],1)]
-    e = Expr $ M.fromList [(["e"],1)]
-    f = Expr $ M.fromList [(["f"],1)]
-    g = Expr $ M.fromList [(["g"],1)]
-    h = Expr $ M.fromList [(["h"],1)]
-    i = Expr $ M.fromList [(["i"],1)]
-    j = Expr $ M.fromList [(["j"],1)]
-    k = Expr $ M.fromList [(["k"],1)]
-    l = Expr $ M.fromList [(["l"],1)]
-    m = Expr $ M.fromList [(["m"],1)]
-    n = Expr $ M.fromList [(["n"],1)]
-    o = Expr $ M.fromList [(["o"],1)]
-    p = Expr $ M.fromList [(["p"],1)]
-    q = Expr $ M.fromList [(["q"],1)]
-    r = Expr $ M.fromList [(["r"],1)]
+    a = fromString "a"
+    b = fromString "b"
+    c = fromString "c"
+    d = fromString "d"
+    e = fromString "e"
+    f = fromString "f"
+    g = fromString "g"
+    h = fromString "h"
+    i = fromString "i"
+    j = fromString "j"
+    k = fromString "k"
+    l = fromString "l"
+    m = fromString "m"
+    n = fromString "n"
+    o = fromString "o"
+    p = fromString "p"
+    q = fromString "q"
+    r = fromString "r"
 
     q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12:: PolynomialSym 12
     q1 = a !* x1^2 + b !* x1*y1 + c !* y1^2 + d !* x1 + e !* y1 + f!*1
