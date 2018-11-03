@@ -3,7 +3,7 @@
 
 module Ejemplos.Spheres (idealSpheres) where
 
-    import Algebra.Prelude
+    import Algebra.Prelude hiding (fromString)
     import Symbolic.Wu
     import Data.Map.Strict as M
     import Symbolic.Expr
@@ -14,18 +14,18 @@ module Ejemplos.Spheres (idealSpheres) where
     v = var 3
 
     a,b,c,d,e,f,g,h,i,s,t,u :: Expr Integer
-    a = Expr $ M.fromList [(["a"],1)]
-    b = Expr $ M.fromList [(["b"],1)]
-    c = Expr $ M.fromList [(["c"],1)]
-    s = Expr $ M.fromList [(["s"],1)]
-    d = Expr $ M.fromList [(["d"],1)]
-    e = Expr $ M.fromList [(["e"],1)]
-    f = Expr $ M.fromList [(["f"],1)]
-    t = Expr $ M.fromList [(["t"],1)]
-    g = Expr $ M.fromList [(["g"],1)]
-    h = Expr $ M.fromList [(["h"],1)]
-    i = Expr $ M.fromList [(["i"],1)]
-    u = Expr $ M.fromList [(["u"],1)]
+    a = fromString "a"
+    b = fromString "b"
+    c = fromString "c"
+    s = fromString "s"
+    d = fromString "d"
+    e = fromString "e"
+    f = fromString "f"
+    t = fromString "t"
+    g = fromString "g"
+    h = fromString "h"
+    i = fromString "i"
+    u = fromString "u"
 
 
     s1,s2,s3,s4 :: PolynomialSym 4

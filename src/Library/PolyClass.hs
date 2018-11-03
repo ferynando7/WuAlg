@@ -13,7 +13,8 @@ module Library.PolyClass
     varInPoly,
     numVarPolys,
     dividendPolys,
-    classVarDeg
+    classVarDeg,
+    (//)
 ) where
 
 import Algebra.Prelude                  hiding ((>>),(>>=))

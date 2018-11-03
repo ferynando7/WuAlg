@@ -3,17 +3,17 @@
 
 module Ejemplos.Strofoid (idealStrofoid) where
 
-    import Algebra.Prelude
+    import Algebra.Prelude hiding (fromString)
     import Symbolic.Wu
     import Data.Map.Strict as M
     import Symbolic.Expr
 
-    a = Expr $ M.fromList [(["a"],1)]
-    b = Expr $ M.fromList [(["b"],1)]
-    c = Expr $ M.fromList [(["c"],1)]
-    d = Expr $ M.fromList [(["d"],1)]
-    e = Expr $ M.fromList [(["e"],1)]
-    f = Expr $ M.fromList [(["f"],1)]
+    a = fromString "a"
+    b = fromString "b"
+    c = fromString "c"
+    d = fromString "d"
+    e = fromString "e"
+    f = fromString "f"
 
     x = var 0
     y = var 1

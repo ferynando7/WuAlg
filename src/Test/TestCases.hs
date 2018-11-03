@@ -12,7 +12,7 @@
 
 module Test.TestCases (test) where
 
-import Algebra.Prelude
+import Algebra.Prelude hiding (fromString)
 import Library.Wu
 import Symbolic.Wu
 import Symbolic.Expr
@@ -37,12 +37,12 @@ strofoidNumeric pols
 
 --Test for strofoid symbolic
 a,b,c,d,e,f :: Expr Integer
-a = Expr $ M.fromList [(["a"],1)]
-b = Expr $ M.fromList [(["b"],1)]
-c = Expr $ M.fromList [(["c"],1)]
-d = Expr $ M.fromList [(["d"],1)]
-e = Expr $ M.fromList [(["e"],1)]
-f = Expr $ M.fromList [(["f"],1)]
+a = fromString "a"
+b = fromString "b"
+c = fromString "c"
+d = fromString "d"
+e = fromString "e"
+f = fromString "f"
 
 ss1,ss2:: PolynomialSym 2
 ss1 = a !* y^2 +  b !* x^2 + c !* x^3
@@ -51,7 +51,7 @@ ss2 = d !* y^2 + e !* x^2 + f !* 1
 strofoidSymbolic :: (IsOrder n order, KnownNat n, Eq k, Num k, PrettyCoeff k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
     => [OrderedPolynomial k order n] -> IO()
 strofoidSymbolic pols
-    | (show $ characteristicWuSetSym pols [] 0) == "[(-1cde) X_0 X_1^2 + (1aee+-1bde) X_1^2 + (-1cef) X_0 + (-1bef),(1ccdddee) X_1^10 + (1aaeeeee+-2abdeeee+1bbddeee+3ccddeef) X_1^8 + (-2abeeeef+2bbdeeef+3ccdeeff) X_1^6 + (1bbeeeff+1cceefff) X_1^4]" = putStrLn "strofoidSymbolic SUCCESSFUL"
+    | (show $ characteristicWuSetSym pols [] 0) == "[(-1cde) X_0 X_1^2 + (1aee+-1bde) X_1^2 + (-1cef) X_0 + (-1bef),(1ccdddee) X_1^6 + (1aaeeeee+-2abdeeee+1bbddeee+3ccddeef) X_1^4 + (-2abeeeef+2bbdeeef+3ccdeeff) X_1^2 + (1bbeeeff+1cceefff)]" = putStrLn "strofoidSymbolic SUCCESSFUL"
     | otherwise = putStrLn "strofoidSymbolic FAILED"
 
 test :: IO ()
