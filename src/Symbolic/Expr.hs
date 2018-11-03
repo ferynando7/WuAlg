@@ -9,7 +9,7 @@ module Symbolic.Expr
     simplify,
     showTermSym,
     evaluate,
-    fromString
+    fromString,
     fromExpr,
     toExpr
 ) where
@@ -35,7 +35,7 @@ import Algebra.Scalar
 
 infixl 5 :/:, :%:
 
-data Expr a =   Expr (Map [String] a)
+data Expr a =   Expr (M.Map [String] a)
                 | (Expr a) :/: (Expr a)
                 | (Expr a) :%: (Expr a)
                 deriving (Eq)
@@ -232,8 +232,8 @@ evaluate (Expr a) str val = Expr $ newMap
       where
             newMap = M.fromList $ map (evalTerm str val) $ M.toList a
             evalTerm _ _ ([""], n) = ([""], n)
-            evalTerm str val (lst, n) = (filter (/= str) lst, n*val^value)
+            evalTerm str val (lst, n) = (L.filter (/= str) lst, n*val^value)
                   where 
                         lengthList = length lst
-                        lengthFiltered = length $ filter (/= str) lst
+                        lengthFiltered = length $ L.filter (/= str) lst
                         value =  fromIntegral (lengthList - lengthFiltered)
