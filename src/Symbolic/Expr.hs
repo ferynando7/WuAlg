@@ -235,7 +235,7 @@ fromInteger int = Expr $ M.fromList [([""],int)]
 evaluate :: Expr Integer -> String -> Integer -> Expr Integer
 evaluate (Expr a) str val = Expr $ newMap
       where
-            newMap = M.fromList $ map (evalTerm str val) $ M.toList a
+            newMap = M.fromListWith (+) $ map (evalTerm str val) $ M.toList a
             evalTerm _ _ ([""], n) = ([""], n)
             evalTerm str val (lst, n) = (L.filter (/= str) lst, n*val^value)
                   where 
