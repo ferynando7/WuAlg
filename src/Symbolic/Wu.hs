@@ -12,19 +12,20 @@ module Symbolic.Wu
     newAscChain,
     printPolys,
     reducePolynomial,
-    simplifyNumSym
+    simplifyNumSym,
+    evaluatePoly,
+    evaluatePolyList
 
 ) where
 
 import Algebra.Prelude hiding (appendFile)
 import Library.Mon
 import Library.PolyClass
-import qualified Data.Map.Strict as V
 import Symbolic.Expr
 import Util.Coeff
 import System.Directory
-import qualified Data.Sized.Builtin       as M
-import qualified Data.Map.Strict        as MS
+import qualified Data.Sized.Builtin       as S
+import qualified Data.Map.Strict        as M
 import System.IO (writeFile, appendFile)
 
 type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
@@ -34,9 +35,9 @@ type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 -- Funcion que saca gcd de los coeficientes de un polinomio
 simplifyNumSym :: (KnownNat n )
             => PolynomialSym n -> PolynomialSym n
-simplifyNumSym pol =  Polynomial $ V.fromList $ map (\(mon, coef)  -> (mon,  toExpr $ MS.map (`div` gcdnum) $ fromExpr coef) ) $ MS.toList  $ _terms pol
+simplifyNumSym pol =  Polynomial $ M.fromList $ map (\(mon, coef)  -> (mon,  toExpr $ M.map (`div` gcdnum) $ fromExpr coef) ) $ M.toList  $ _terms pol
                 where
-                  coefficients =  map MS.elems $ map (fromExpr) $  map (snd) $  MS.toList $ _terms pol
+                  coefficients =  map M.elems $ map (fromExpr) $  map (snd) $  M.toList $ _terms pol
                   -- Here we obtain the coefficients of the polynomial
                   gcdnum =  foldl1 gcd $ map (foldl1 gcd) $ coefficients
                   --  Here we get the gcd of the coeficients
@@ -149,7 +150,7 @@ characteristicWuSetWithStopSym polys oldChain var stop =  (basisPoly : character
 ---------------------------------------
 -- Cambia los coeficientes de un polinimo por unos coeficientes nuevos
 changeVariables :: (KnownNat n) => PolynomialSym n -> Int -> Coeff -> PolynomialSym n
-changeVariables pol step  coeff = Polynomial $ V.fromList $ zipWith (\(a,b) c -> (a,c)) (reverse $ V.toList $ terms  pol) (Algebra.Prelude.map ( fromCoeff step) [coeff ..])
+changeVariables pol step  coeff = Polynomial $ M.fromList $ zipWith (\(a,b) c -> (a,c)) (reverse $ M.toList $ terms  pol) (Algebra.Prelude.map ( fromCoeff step) [coeff ..])
 
 -- Cambia los coeficientes de una lista de polinomios
 changeVariablesList :: (KnownNat n) => [PolynomialSym n] -> Int -> Coeff -> [PolynomialSym n]
@@ -157,7 +158,7 @@ changeVariablesList [] _ _ = []
 changeVariablesList (x:xs) var coeff = (newPolX : changeVariablesList xs var (succ lastCoeff))
         where
                 newPolX = changeVariables x var coeff
-                lastCoeff = (toCoeff . snd . head . V.toList . terms) newPolX
+                lastCoeff = (toCoeff . snd . head . M.toList . terms) newPolX
 
 
 --Realiza el algoritmo de WU paso a paso imprimiendo los resutados necesarios en los archivos crrespondientes
@@ -200,8 +201,8 @@ printCoeffs :: (IsOrder n order, KnownNat n, Eq k, Show k, Num k, Ord k, IsMonom
         => [OrderedPolynomial k order n] -> [OrderedPolynomial k order n] -> FilePath -> IO ()
 printCoeffs [] [] _ = return ()
 printCoeffs new@(n:ns) old@(o:os) path = do
-                                        let coeffsNew = ((map (snd)) . reverse . V.toList . terms) n
-                                        let coeffsOld = ((map (snd)) . reverse . V.toList . terms) o
+                                        let coeffsNew = ((map (snd)) . reverse . M.toList . terms) n
+                                        let coeffsOld = ((map (snd)) . reverse . M.toList . terms) o
                                         printHead <- printList coeffsNew coeffsOld path
                                         printTail <- printCoeffs ns os path
                                         return ()
@@ -210,11 +211,26 @@ printCoeffs new@(n:ns) old@(o:os) path = do
 reducePolynomial :: (IsOrder n1 order, KnownNat n1, Eq k, Num k, Ord k, IsMonomialOrder n1 order, Euclidean k, Integral k,
                      IsOrder n2 order, KnownNat n2 ,IsMonomialOrder n2 order)
         => SNat n1  -> SNat n2 ->OrderedPolynomial k order n1 -> OrderedPolynomial k order n2
-reducePolynomial nat1 nat2 pol = Polynomial $ V.fromList $ zipWith (,) newAlgPart coeffs
+reducePolynomial nat1 nat2 pol = Polynomial $ M.fromList $ zipWith (,) newAlgPart coeffs
 --        | varInPoly nat1 0 pol /= 0 = pol
---        |otherwise = Polynomial $ V.fromList $ zipWith (,) newAlgPart coeffs
+--        |otherwise = Polynomial $ M.fromList $ zipWith (,) newAlgPart coeffs
                 where
-                        polToList = reverse $ V.toList $ terms pol
+                        polToList = reverse $ M.toList $ terms pol
                         algPart = map fst polToList
                         coeffs = map snd polToList
-                        newAlgPart = map (toMonomial) $ (map (tail . M.toList . getMonomial)) algPart
+                        newAlgPart = map (toMonomial) $ (map (tail . S.toList . getMonomial)) algPart
+
+
+--  Function that evaluate certain symbolic value in the polynomial
+evaluatePoly :: (KnownNat n)
+        => PolynomialSym n ->  (String, Integer) -> PolynomialSym n
+evaluatePoly poly ("", _) = poly
+evaluatePoly poly (str, val) =  Polynomial $ M.fromList  $ evaluateCoef polyList
+        where
+                polyList = M.toList $ _terms poly
+                evaluateCoef = map (\(mon, coeff) ->  (mon, evaluate coeff str val))
+
+evaluatePolyList :: (KnownNat n)
+        => PolynomialSym n ->  [(String,Integer)] ->  PolynomialSym n
+evaluatePolyList poly [] = poly
+evaluatePolyList poly (v:vs) = evaluatePolyList (evaluatePoly poly v) vs 
