@@ -12,7 +12,9 @@ module Symbolic.Wu
     newAscChain,
     printPolys,
     reducePolynomial,
-    simplifyNumSym
+    simplifyNumSym,
+    evaluatePoly,
+    evaluatePolyList
 
 ) where
 
@@ -218,3 +220,26 @@ reducePolynomial nat1 nat2 pol = Polynomial $ V.fromList $ zipWith (,) newAlgPar
                         algPart = map fst polToList
                         coeffs = map snd polToList
                         newAlgPart = map (toMonomial) $ (map (tail . M.toList . getMonomial)) algPart
+
+
+--  Function that evaluate certain symbolic value in the polynomial
+evaluatePoly :: (KnownNat n)
+        => PolynomialSym n ->  String -> Integer -> PolynomialSym n
+evaluatePoly poly "" _ = poly
+evaluatePoly poly str val =  Polynomial $ V.fromList  $ evaluateCoef polyList
+                where
+                        polyList = MS.toList $ _terms poly
+                        evaluateCoef polist = map (\(mon, coeff) ->  (mon, evaluate' coeff str val)) polist
+
+-- Function that evaluate a set of symbolic values in the polynomial
+evaluatePolyList :: (KnownNat n)
+        => PolynomialSym n ->  [(String,Integer)] ->  PolynomialSym n
+evaluatePolyList poly [] = poly
+evaluatePolyList poly values =  Polynomial $ V.fromList $ evaluateCoef polyList
+                where
+                        polyList = MS.toList $ _terms poly
+                        evaluateCoef polist = map (\(mon, coeff) ->  (mon, eval coeff values)) polist
+                              where
+                                eval coeff [] = coeff
+                                eval coeff [a] = evaluate' coeff (fst a) (snd a)
+                                eval coeff vals@(v:vs) = eval (evaluate' coeff (fst v) (snd v)) vs

@@ -23,7 +23,10 @@ import Ejemplos.Conicas
 import Ejemplos.GeneralizedSurface
 import Ejemplos.Spheres
 import Ejemplos.Strofoid
+import Ejemplos.Astrofisica
+import Ejemplos.AstrofisicaSym
 import qualified Data.Sized.Builtin as S
+import qualified Data.List as L
 
 
 

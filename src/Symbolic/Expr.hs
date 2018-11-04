@@ -11,7 +11,9 @@ module Symbolic.Expr
     evaluate,
     fromString,
     fromExpr,
-    toExpr
+    toExpr,
+    evaluate',
+    checkSimilar
 ) where
 
 import qualified Algebra.Prelude  as AP hiding ((++), (+), (-), (*), (^))
@@ -66,17 +68,17 @@ instance (Integral a) => A.Additive (Expr a) where
 
 
 instance N.RightModule Natural (Expr Integer) where
-    Expr a *. n = Expr $ M.map (* (toInteger n)) a 
+    Expr a *. n = Expr $ M.map (* (toInteger n)) a
 
 instance N.LeftModule Natural (Expr Integer) where
     n .* Expr a = Expr $ M.map (* (toInteger n)) a
-         
+
 instance N.RightModule Integer (Expr Integer) where
-    Expr a *. n = Expr $ M.map (*n) a        
+    Expr a *. n = Expr $ M.map (*n) a
 
 instance N.LeftModule Integer (Expr Integer) where
     n .* Expr a = Expr $ M.map (*n) a
-    
+
 instance N.Monoidal (Expr Integer) where
     zero = Expr M.empty
 
@@ -177,7 +179,7 @@ instance Enum (Expr Integer) where
 
 
 suma :: (Eq a, Num a, Integral a) => Expr a -> Expr a -> Expr a
-suma (Expr a) (Expr b) = simplify $ Expr $ M.unionWith (+) a b 
+suma (Expr a) (Expr b) = simplify $ Expr $ M.unionWith (+) a b
 
 prodSym :: (Integral a, Num a) => Expr a -> Expr a -> Expr a
 -- prodSym _ zero = zero
@@ -199,7 +201,7 @@ insertFull (x:xs) = M.unionWith (+) (insertFull [x]) (insertFull xs)
 -- Multiply two list of terms
 prodList :: (Num a) => [([String], a)] -> [([String], a)] -> [([String], a)]
 prodList [] _ = []
-prodList  (x:xs) y = (map (*** x) y) ++ prodList xs y  
+prodList  (x:xs) y = (map (*** x) y) ++ prodList xs y
 
 
 --Multiply two terms
@@ -237,8 +239,30 @@ evaluate (Expr a) str val = Expr $ newMap
       where
             newMap = M.fromList $ map (evalTerm str val) $ M.toList a
             evalTerm _ _ ([""], n) = ([""], n)
-            evalTerm str val (lst, n) = (L.filter (/= str) lst, n*val^value)
-                  where 
+            evalTerm str val mon@(lst, n) = (L.filter (/= str) lst, n*val^value)
+                  where
                         lengthList = length lst
                         lengthFiltered = length $ L.filter (/= str) lst
                         value =  fromIntegral (lengthList - lengthFiltered)
+
+
+-- Function that check if the there is similar strings and sum the corresponding value in the tuple
+checkSimilar :: [([String],Integer)] -> [([String], Integer)]
+checkSimilar [] = []
+checkSimilar list = [reducedList]  ++ checkSimilar newList
+              where
+                  headl = head list
+                  newList  =  L.filter (\(x,y) -> x/=(fst headl) ) list
+                  reducedList = foldl1 (\(x,y) (a,b) -> if x == a then (x,y+b) else (x,y)) list
+
+-- Modified version of the evaluate using checkSimilar before converting to fromList
+evaluate' :: Expr Integer -> String -> Integer -> Expr Integer
+evaluate' (Expr a) str val = Expr $ newMap
+    where
+          newMap = M.fromList $ checkSimilar $ map (evalTerm str val) $ M.toList a
+          evalTerm _ _ ([""], n) = ([""], n)
+          evalTerm str val mon@(lst, n) = (L.filter (/= str) lst, n*val^value)
+                where
+                      lengthList = length lst
+                      lengthFiltered = length $ L.filter (/= str) lst
+                      value =  fromIntegral (lengthList - lengthFiltered)
