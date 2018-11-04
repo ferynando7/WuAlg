@@ -229,7 +229,7 @@ evaluatePoly poly "" _ = poly
 evaluatePoly poly str val =  Polynomial $ V.fromList  $ evaluateCoef polyList
                 where
                         polyList = MS.toList $ _terms poly
-                        evaluateCoef polist = map (\(mon, coeff) ->  (mon, evaluate' coeff str val)) polist
+                        evaluateCoef polist = map (\(mon, coeff) ->  (mon, evaluate coeff str val)) polist
 
 -- Function that evaluate a set of symbolic values in the polynomial
 evaluatePolyList :: (KnownNat n)
@@ -241,5 +241,5 @@ evaluatePolyList poly values =  Polynomial $ V.fromList $ evaluateCoef polyList
                         evaluateCoef polist = map (\(mon, coeff) ->  (mon, eval coeff values)) polist
                               where
                                 eval coeff [] = coeff
-                                eval coeff [a] = evaluate' coeff (fst a) (snd a)
-                                eval coeff vals@(v:vs) = eval (evaluate' coeff (fst v) (snd v)) vs
+                                eval coeff [a] = evaluate coeff (fst a) (snd a)
+                                eval coeff vals@(v:vs) = eval (evaluate coeff (fst v) (snd v)) vs

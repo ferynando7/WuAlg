@@ -12,8 +12,7 @@ module Symbolic.Expr
     fromString,
     fromExpr,
     toExpr,
-    evaluate',
-    checkSimilar
+
 ) where
 
 import qualified Algebra.Prelude  as AP hiding ((++), (+), (-), (*), (^))
@@ -237,32 +236,11 @@ fromInteger int = Expr $ M.fromList [([""],int)]
 evaluate :: Expr Integer -> String -> Integer -> Expr Integer
 evaluate (Expr a) str val = Expr $ newMap
       where
-            newMap = M.fromList $ map (evalTerm str val) $ M.toList a
+            newMap = M.fromListWith (+)  $ map (evalTerm str val) $ M.toList a
             evalTerm _ _ ([""], n) = ([""], n)
             evalTerm str val mon@(lst, n) = (L.filter (/= str) lst, n*val^value)
                   where
                         lengthList = length lst
                         lengthFiltered = length $ L.filter (/= str) lst
                         value =  fromIntegral (lengthList - lengthFiltered)
-
-
--- Function that check if the there is similar strings and sum the corresponding value in the tuple
-checkSimilar :: [([String],Integer)] -> [([String], Integer)]
-checkSimilar [] = []
-checkSimilar list = [reducedList]  ++ checkSimilar newList
-              where
-                  headl = head list
-                  newList  =  L.filter (\(x,y) -> x/=(fst headl) ) list
-                  reducedList = foldl1 (\(x,y) (a,b) -> if x == a then (x,y+b) else (x,y)) list
-
--- Modified version of the evaluate using checkSimilar before converting to fromList
-evaluate' :: Expr Integer -> String -> Integer -> Expr Integer
-evaluate' (Expr a) str val = Expr $ newMap
-    where
-          newMap = M.fromList $ checkSimilar $ map (evalTerm str val) $ M.toList a
-          evalTerm _ _ ([""], n) = ([""], n)
-          evalTerm str val mon@(lst, n) = (L.filter (/= str) lst, n*val^value)
-                where
-                      lengthList = length lst
-                      lengthFiltered = length $ L.filter (/= str) lst
-                      value =  fromIntegral (lengthList - lengthFiltered)
+on t
