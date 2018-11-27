@@ -82,7 +82,9 @@ characteristicWuSingleton polys [] var = ([basisPoly], pseudos)
         basisPoly = minimalPolyWithVar (minimalPoly: (getPseudoRemainders polys var) ) var
         -- We compute the pseudo remainders for the next iteration
         pseudos = map (\p -> if p == basisPoly && minimalPoly /=  basisPoly then pseudoRemainder var basisPoly minimalPoly else pseudoRemainder var basisPoly p) (getPseudoRemainders polys var)
-characteristicWuSingleton polys oldChain var =  ((basisPoly:oldChain),  pseudos  )
+        
+
+characteristicWuSingleton polys oldChain var =  ((basisPoly:oldChain), pseudos)
         where
         -- We compute the minimal Polynomial of the set
         minimalPoly = minimalPolyWithVar polys var
