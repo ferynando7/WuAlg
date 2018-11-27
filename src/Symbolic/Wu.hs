@@ -27,6 +27,7 @@ import System.Directory
 import qualified Data.Sized.Builtin       as S
 import qualified Data.Map.Strict        as M
 import System.IO (writeFile, appendFile)
+import Debug.Trace
 
 type PolynomialSym n = OrderedPolynomial (Expr Integer) Lex n
 
@@ -57,14 +58,18 @@ simplifyTermSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n 
         => OrderedPolynomial k order n -> OrderedPolynomial k order n
 simplifyTermSym pol  = pol // (one, commonMonomial pol)
 
-pseudoRemainderSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+wpseudoRemainderSym :: (IsOrder n order, KnownNat n, Eq k, PrettyCoeff k,  Num k, IsMonomialOrder n order, Euclidean k, Integral k)
                     => Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
-pseudoRemainderSym var g f
+wpseudoRemainderSym var g f
                 | classVarDeg f var < classVarDeg g var || classVarDeg g var == 0 = f
                 | otherwise = pseudoRemainderSym var g (sPolynomialSym' f g var)
 
+pseudoRemainderSym :: (IsOrder n order, KnownNat n, PrettyCoeff k, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+        => Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
+pseudoRemainderSym var g f = trace ("Polinomio \n" ++ show f ++ "\ndividido para \n" ++ show g ++ " \nresulta en: \n" ++ show (wpseudoRemainderSym var g f) ++ "\n\n\n") $ wpseudoRemainderSym var g f 
+
 ------------------FUNCION QUE OBTIENE LOS pseudoRemainderSymS DE UN CONJUNTO DE POLINOMIOS
-getPseudoRemaindersSym :: (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+getPseudoRemaindersSym :: (IsOrder n order, KnownNat n, Eq k, Num k, PrettyCoeff k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> Int -> [OrderedPolynomial k order n]
 getPseudoRemaindersSym pols var = map (pseudoRemainderSym var divisor) dividends
         where
@@ -72,7 +77,7 @@ getPseudoRemaindersSym pols var = map (pseudoRemainderSym var divisor) dividends
                 dividends = dividendPolys pols var
 
 -- En el nuevo inverted psuedoremainders se tiene encuenta la posicion de los elementos para los cuales se esta dividiendo el polinomio
-invPseudoRemaindersSym :: (IsOrder n order, KnownNat n, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
+invPseudoRemaindersSym :: (IsOrder n order, KnownNat n, PrettyCoeff k, Eq k, Num k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n -> [OrderedPolynomial k order n]
 invPseudoRemaindersSym pols pol = map (foo pol) polinomials
         where
@@ -80,7 +85,7 @@ invPseudoRemaindersSym pols pol = map (foo pol) polinomials
                 polinomials = zip pols [0..]
 
 
-characteristicWuSetSym ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+characteristicWuSetSym ::  (IsOrder n order, KnownNat n, PrettyCoeff k, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> Int -> [OrderedPolynomial k order n]
 characteristicWuSetSym [a] _ var = [a]
 characteristicWuSetSym polys [] var = (basisPoly: characteristicWuSetSym pseudos [basisPoly] (var+1))
@@ -101,7 +106,7 @@ characteristicWuSetSym polys oldChain var =  (basisPoly : characteristicWuSetSym
         pseudos = map (\p -> if p == basisPoly && basisPoly /= minimalPoly then pseudoRemainderSym var basisPoly minimalPoly else pseudoRemainderSym var basisPoly p) (getPseudoRemaindersSym polys var)
 
 
-characteristicWuSingletonSym ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+characteristicWuSingletonSym ::  (IsOrder n order, KnownNat n, PrettyCoeff k, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> Int -> ([OrderedPolynomial k order n],[OrderedPolynomial k order n])
 characteristicWuSingletonSym [a] _ var = ([a],[])
 characteristicWuSingletonSym polys [] var = ([basisPoly], pseudos)
@@ -124,7 +129,7 @@ characteristicWuSingletonSym polys oldChain var =  ((basisPoly:oldChain),  pseud
 
 
 
-characteristicWuSetWithStopSym ::  (IsOrder n order, KnownNat n, Eq k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
+characteristicWuSetWithStopSym ::  (IsOrder n order, KnownNat n, Eq k, PrettyCoeff k, Num k, Ord k, IsMonomialOrder n order, Euclidean k, Integral k)
         => [OrderedPolynomial k order n] ->  [OrderedPolynomial k order n] -> Int -> Int -> [OrderedPolynomial k order n]
 characteristicWuSetWithStopSym _ _ _ 0 = []
 characteristicWuSetWithStopSym [a] _ var stop = [a]

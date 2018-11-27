@@ -30,8 +30,9 @@ executable hskl
         lens -any,
         sized -any,
         ListLike -any,
-        directory -any
+        directory -any,
+	      parallel -any
        
-  ghc-options: -ferror-spans
+ -- ghc-options: -ferror-spans
 
   

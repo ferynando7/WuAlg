@@ -53,8 +53,8 @@ classVarDeg pol var =  leadingMonomialDegs !! var
 minimalPolyWithVar ::(IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
          => [OrderedPolynomial k order n] -> Int -> OrderedPolynomial k order n
 minimalPolyWithVar pols var
-        | listOfPossiblePolys == [] = minimalPoly pols
-        | otherwise = minimalPoly listOfPossiblePolys
+        | listOfPossiblePolys == [] = minimalPoly pols var
+        | otherwise = minimalPoly listOfPossiblePolys var
         where listOfPossiblePolys = filter (varInPoly var) pols
 
 numVarPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Euclidean k)
@@ -73,9 +73,21 @@ varInPolys :: (IsOrder n order, KnownNat n, Eq k, IsMonomialOrder n order, Eucli
 varInPolys var pols = foldl foo 0 pols
                 where foo = \acc pol -> if varInPoly var pol then acc + 1 else acc
 
+-- minimalPoly :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
+--         => [OrderedPolynomial k order n] -> OrderedPolynomial k order n
+-- minimalPoly pols = foldl1 (\acc pol -> if acc << pol then acc else pol) pols
+
 minimalPoly :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
-        => [OrderedPolynomial k order n] -> OrderedPolynomial k order n
-minimalPoly pols = foldl1 (\acc pol -> if acc << pol then acc else pol) pols
+        => [OrderedPolynomial k order n] -> Int -> OrderedPolynomial k order n
+minimalPoly pols var = foldl1 (foo var) pols
+
+foo :: (IsOrder n order, KnownNat n, Eq k, Ord k, IsMonomialOrder n order, Euclidean k)
+        => Int -> OrderedPolynomial k order n -> OrderedPolynomial k order n -> OrderedPolynomial k order n
+foo var pol1 pol2 
+        | classVarDeg pol1 var < classVarDeg pol2 var = pol1
+        | classVarDeg pol1 var > classVarDeg pol2 var = pol2
+        | otherwise = case (pol1 << pol2) of    True -> pol1
+                                                False -> pol2
 
 
 --Funcion que obtiene los polinomios que seran los divisores
