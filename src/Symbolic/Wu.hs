@@ -213,17 +213,22 @@ printCoeffs new@(n:ns) old@(o:os) path = do
                                         return ()
 
 
-reducePolynomial :: (IsOrder n1 order, KnownNat n1, Eq k, Num k, Ord k, IsMonomialOrder n1 order, Euclidean k, Integral k,
-                     IsOrder n2 order, KnownNat n2 ,IsMonomialOrder n2 order)
-        => SNat n1  -> SNat n2 ->OrderedPolynomial k order n1 -> OrderedPolynomial k order n2
-reducePolynomial nat1 nat2 pol = Polynomial $ M.fromList $ zipWith (,) newAlgPart coeffs
+reducePolynomial :: (IsOrder n1 order, KnownNat n1, Eq k, Num k, Ord k, IsMonomialOrder n1 order, Euclidean k, Integral k)
+        => OrderedPolynomial k order n1 -> Int -> (OrderedPolynomial k order n1, [OrderedMonomial order n1])
+reducePolynomial  pol var = (Polynomial $ M.fromList $ zipWith (,) (map toMonomial newAlgPart) coeffs, map toMonomial varsToCoeffs )
 --        | varInPoly nat1 0 pol /= 0 = pol
 --        |otherwise = Polynomial $ M.fromList $ zipWith (,) newAlgPart coeffs
                 where
                         polToList = reverse $ M.toList $ terms pol
                         algPart = map fst polToList
                         coeffs = map snd polToList
-                        newAlgPart = map (toMonomial) $ (map (tail . S.toList . getMonomial)) algPart
+                        newAlgPart = (map ((removeVars var 0) . S.toList . getMonomial)) algPart
+                        varsToCoeffs = removeVarsComplement (map (S.toList . getMonomial) algPart) newAlgPart
+                        removeVars _ _ [] = []
+                        removeVars var idx (x:xs)
+                                | var /= idx = 0:(removeVars var (idx+1) xs)
+                                | otherwise = x:(removeVars var (idx+1) xs)
+                        removeVarsComplement = zipWith (zipWith (-))
 
 
 --  Function that evaluate certain symbolic value in the polynomial

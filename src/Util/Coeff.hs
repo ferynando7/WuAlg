@@ -35,11 +35,13 @@ instance Enum Coeff where
 succ' :: String -> String
 succ' [a] 
     | a == 'z' = 'a':"a"
+    | a == 'Z' = 'A':"A"
     | otherwise = [succ a]
-succ' a 
-    | last a /= 'z' = (init a) ++ [succ $ last a]
-    | otherwise = succ' (init a) ++ "a"
-
+succ' a
+    | last a == 'z' = succ' (init a) ++ "a"
+    | last a == 'Z' = succ' (init a) ++ "A"
+    | otherwise = (init a) ++ [succ $ last a]
+    
 
 fromCoeff :: Int -> Coeff -> Expr Integer
 fromCoeff num coeff = Expr $ fromList [([getCoeff coeff ++ show num], 1)]
