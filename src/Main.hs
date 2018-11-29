@@ -25,6 +25,7 @@ import Ejemplos.GeneralizedSurface
 import Ejemplos.GeneralizedSurfaceNum
 import Ejemplos.Spheres
 import Ejemplos.Strofoid
+import Ejemplos.BisectorSurface
 import qualified Data.Sized.Builtin as S
 
 
