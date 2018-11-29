@@ -12,13 +12,14 @@ module Symbolic.Wu
     newAscChain,
     printPolys,
     reducePolynomial,
+    reducePolynomial',
     simplifyNumSym,
     evaluatePoly,
     evaluatePolyList
 
 ) where
 
-import Algebra.Prelude hiding (appendFile)
+import Algebra.Prelude hiding (appendFile, fromString)
 import Library.Mon
 import Library.PolyClass
 import Symbolic.Expr
@@ -213,15 +214,14 @@ printCoeffs new@(n:ns) old@(o:os) path = do
                                         return ()
 
 
-reducePolynomial :: (IsOrder n1 order, KnownNat n1, Eq k, Num k, Ord k, IsMonomialOrder n1 order, Euclidean k, Integral k)
-        => OrderedPolynomial k order n1 -> Int -> (OrderedPolynomial k order n1, [OrderedMonomial order n1])
-reducePolynomial  pol var = (Polynomial $ M.fromList $ zipWith (,) (map toMonomial newAlgPart) coeffs, map toMonomial varsToCoeffs )
---        | varInPoly nat1 0 pol /= 0 = pol
---        |otherwise = Polynomial $ M.fromList $ zipWith (,) newAlgPart coeffs
+reducePolynomial' :: (IsOrder n1 order, KnownNat n1, IsMonomialOrder n1 order)
+        => OrderedPolynomial (Expr Integer) order n1 -> Int -> (OrderedPolynomial (Expr Integer) order n1, [OrderedMonomial order n1])
+reducePolynomial'  pol var = (Polynomial $ M.fromList $ zipWith (,) (map toMonomial newAlgPart) nCoeffs, map toMonomial varsToCoeffs )
                 where
                         polToList = reverse $ M.toList $ terms pol
                         algPart = map fst polToList
                         coeffs = map snd polToList
+                        nCoeffs = zipWith (*) coeffs (map (fromCoeff 0) [Coeff "A" ..])
                         newAlgPart = (map ((removeVars var 0) . S.toList . getMonomial)) algPart
                         varsToCoeffs = removeVarsComplement (map (S.toList . getMonomial) algPart) newAlgPart
                         removeVars _ _ [] = []
@@ -231,6 +231,35 @@ reducePolynomial  pol var = (Polynomial $ M.fromList $ zipWith (,) (map toMonomi
                         removeVarsComplement = zipWith (zipWith (-))
 
 
+reducePolynomial :: (IsOrder n1 order, KnownNat n1, IsMonomialOrder n1 order)
+        => OrderedPolynomial (Expr Integer) order n1 -> Int -> OrderedPolynomial (Expr Integer) order n1
+reducePolynomial  pol var = Polynomial $ M.fromList newPol
+                where
+                        polToList = reverse $ M.toList $ terms pol
+                        newPol = map (removeVarsMonList 0) polToList
+
+removeVarsMonList :: (KnownNat n) => Int -> (OrderedMonomial order n, Expr Integer) -> (OrderedMonomial order n, Expr Integer)
+removeVarsMonList var (mon, coeff) = (toMonomial $ removeVarsList var 0 ((S.toList . getMonomial) mon), newCoeff)
+        where
+                newCoeff = updateCoeff 0 (removeVarsListComplement var ((S.toList . getMonomial) mon)) coeff
+                        
+removeVarsList :: Int -> Int -> [Int] -> [Int]
+removeVarsList _ _ [] = []
+removeVarsList var idx (x:xs)
+        | var /= idx = 0:(removeVarsList var (idx+1) xs)
+        | otherwise = x:(removeVarsList var (idx+1) xs)
+
+removeVarsListComplement :: Int -> [Int] -> [Int]
+removeVarsListComplement var lst = zipWith (-) lst (removeVarsList var 0 lst)
+                
+
+updateCoeff :: Int -> [Int] -> Expr Integer -> Expr Integer
+updateCoeff _ [] expr = expr
+updateCoeff idx (c:cs) expr
+        | c == 0 = updateCoeff (idx+1) cs expr
+        | otherwise = updateCoeff (idx) ((c-1):cs) $ (*) expr (fromString ("X_" ++ show idx))
+        
+                
 --  Function that evaluate certain symbolic value in the polynomial
 evaluatePoly :: (KnownNat n)
         => PolynomialSym n ->  (String, Integer) -> PolynomialSym n
